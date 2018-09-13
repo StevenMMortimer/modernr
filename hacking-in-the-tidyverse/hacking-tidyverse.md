@@ -13,13 +13,16 @@ Steven M. Mortimer
     -   [Argument matching in functions](#argument-matching-in-functions)
     -   [Use NULL as the default value for missing arguments](#use-null-as-the-default-value-for-missing-arguments)
     -   [What do those dots (...) mean?](#what-do-those-dots-...-mean)
+    -   [Functions with a dot in the name](#functions-with-a-dot-in-the-name)
     -   [Writing recursive functions](#writing-recursive-functions)
 -   [Tidyverse Tricks](#tidyverse-tricks)
+    -   [The new conditional select() and rename() functions](#the-new-conditional-select-and-rename-functions)
+    -   [The everything() function for selecting columns](#the-everything-function-for-selecting-columns)
+    -   [Using purrr's map() function](#using-purrrs-map-function)
     -   [lubridate](#lubridate)
     -   [group\_by](#group_by)
     -   [spread/gather](#spreadgather)
     -   [rename\_all](#rename_all)
-    -   [map\_df](#map_df)
 
 Functions
 =========
@@ -398,7 +401,7 @@ lm
     ##         z$qr <- NULL
     ##     z
     ## }
-    ## <bytecode: 0x7ff72aad0978>
+    ## <bytecode: 0x7fb4b8169350>
     ## <environment: namespace:stats>
 
 They are provided to the `lm.fit()` or `lm.wfit()` functions. If you look at those functions using `?lm.fit`, you'll see that there are some arguments that we could be specifying in our original `lm()` call to control how things work. For exmaple, the `tol` argument can be specified.
@@ -453,6 +456,73 @@ messaged_mean(x=c(1:10,50), trim=.1)
 
     ## The mean is: 6.000
 
+Functions with a dot in the name
+--------------------------------
+
+You may notice that sometimes functions have a dot in the name. Most of the time the package developer is trying to make the name more readable, but this is not always the case. Look at the print function:
+
+``` r
+print
+```
+
+    ## function (x, ...) 
+    ## UseMethod("print")
+    ## <bytecode: 0x7fb4b7137518>
+    ## <environment: namespace:base>
+
+There's not much to the function and you can see that it includes those dots. This is basically defining a function called "print" that takes an object and some other unnamed arguments and does something. We're not sure what though. Now let's look at the function `print.data.frame`:
+
+``` r
+print.data.frame
+```
+
+    ## function (x, ..., digits = NULL, quote = FALSE, right = TRUE, 
+    ##     row.names = TRUE) 
+    ## {
+    ##     n <- length(row.names(x))
+    ##     if (length(x) == 0L) {
+    ##         cat(sprintf(ngettext(n, "data frame with 0 columns and %d row", 
+    ##             "data frame with 0 columns and %d rows"), n), "\n", 
+    ##             sep = "")
+    ##     }
+    ##     else if (n == 0L) {
+    ##         print.default(names(x), quote = FALSE)
+    ##         cat(gettext("<0 rows> (or 0-length row.names)\n"))
+    ##     }
+    ##     else {
+    ##         m <- as.matrix(format.data.frame(x, digits = digits, 
+    ##             na.encode = FALSE))
+    ##         if (!isTRUE(row.names)) 
+    ##             dimnames(m)[[1L]] <- if (identical(row.names, FALSE)) 
+    ##                 rep.int("", n)
+    ##             else row.names
+    ##         print(m, ..., quote = quote, right = right)
+    ##     }
+    ##     invisible(x)
+    ## }
+    ## <bytecode: 0x7fb4b820a0a0>
+    ## <environment: namespace:base>
+
+You can see that whenever you print a `data.frame` you can control the number of digits, quoting, etc. The body of the function contains the familiar logic of what gets printed to the screen when you look at a data.frame. The `print()` function is called a generic. When you run it R will look for a more specific version of print that knows how to handle the specific object type that you passed to it. In this case, it will print a data.frame according to the function `print.data.frame`. A couple simple examples of this at work are:
+
+``` r
+print(head(iris))
+```
+
+    ##   Sepal.Length Sepal.Width Petal.Length Petal.Width Species
+    ## 1          5.1         3.5          1.4         0.2  setosa
+    ## 2          4.9         3.0          1.4         0.2  setosa
+    ## 3          4.7         3.2          1.3         0.2  setosa
+    ## 4          4.6         3.1          1.5         0.2  setosa
+    ## 5          5.0         3.6          1.4         0.2  setosa
+    ## 6          5.4         3.9          1.7         0.4  setosa
+
+``` r
+print(Sys.time())
+```
+
+    ## [1] "2018-09-13 16:50:23 EDT"
+
 Writing recursive functions
 ---------------------------
 
@@ -492,6 +562,267 @@ I highly recommend a quick read by Hadley on functions that is available here: <
 Tidyverse Tricks
 ================
 
+Before we get started, let's load some required packages.
+
+``` r
+library(plyr)
+library(dplyr)
+library(purrr)
+library(lubridate)
+```
+
+The new conditional select() and rename() functions
+---------------------------------------------------
+
+In newer versions of `dplyr` you have even better version of `select()` and `rename()`. Namely, `select_if`
+
+The everything() function for selecting columns
+-----------------------------------------------
+
+Also, don't forget about the handy function `everything()`. This literally selects everything else that you haven't already grabbed in your `select()` function. This is really handy when you want to re-order your columns or set things up for later reporting.
+
+``` r
+iris %>% 
+  select(Species, everything()) %>%
+  as_tibble()
+```
+
+    ## # A tibble: 150 x 5
+    ##    Species Sepal.Length Sepal.Width Petal.Length Petal.Width
+    ##    <fct>          <dbl>       <dbl>        <dbl>       <dbl>
+    ##  1 setosa          5.10        3.50         1.40       0.200
+    ##  2 setosa          4.90        3.00         1.40       0.200
+    ##  3 setosa          4.70        3.20         1.30       0.200
+    ##  4 setosa          4.60        3.10         1.50       0.200
+    ##  5 setosa          5.00        3.60         1.40       0.200
+    ##  6 setosa          5.40        3.90         1.70       0.400
+    ##  7 setosa          4.60        3.40         1.40       0.300
+    ##  8 setosa          5.00        3.40         1.50       0.200
+    ##  9 setosa          4.40        2.90         1.40       0.200
+    ## 10 setosa          4.90        3.10         1.50       0.100
+    ## # ... with 140 more rows
+
+Using purrr's map() function
+----------------------------
+
+You'll hear R users talk about vectorized functions and how they are more efficient than running a loop. It's true that sometimes loops are necessary or they are easier to read. However, if you're trying to perform the same operations on everything in a `vector`, `list`, or row of a `data.frame`, then there are some functions to help you.
+
+In the old days, there was a package called `plyr`. It had functions that took a specific type of input, then repeated an operation on each element. The documentation for the `llply` function says it all: &gt; For each element of a list, apply function, keeping results as a list.
+
+``` r
+llply(iris, summary)
+```
+
+    ## $Sepal.Length
+    ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+    ##   4.300   5.100   5.800   5.843   6.400   7.900 
+    ## 
+    ## $Sepal.Width
+    ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+    ##   2.000   2.800   3.000   3.057   3.300   4.400 
+    ## 
+    ## $Petal.Length
+    ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+    ##   1.000   1.600   4.350   3.758   5.100   6.900 
+    ## 
+    ## $Petal.Width
+    ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+    ##   0.100   0.300   1.300   1.199   1.800   2.500 
+    ## 
+    ## $Species
+    ##     setosa versicolor  virginica 
+    ##         50         50         50
+
+If you have a `data.frame` and want to perform a function for each component of it, then just use `dlply`:
+
+``` r
+dlply(iris, .(Species), summary)
+```
+
+    ## $setosa
+    ##   Sepal.Length    Sepal.Width     Petal.Length    Petal.Width   
+    ##  Min.   :4.300   Min.   :2.300   Min.   :1.000   Min.   :0.100  
+    ##  1st Qu.:4.800   1st Qu.:3.200   1st Qu.:1.400   1st Qu.:0.200  
+    ##  Median :5.000   Median :3.400   Median :1.500   Median :0.200  
+    ##  Mean   :5.006   Mean   :3.428   Mean   :1.462   Mean   :0.246  
+    ##  3rd Qu.:5.200   3rd Qu.:3.675   3rd Qu.:1.575   3rd Qu.:0.300  
+    ##  Max.   :5.800   Max.   :4.400   Max.   :1.900   Max.   :0.600  
+    ##        Species  
+    ##  setosa    :50  
+    ##  versicolor: 0  
+    ##  virginica : 0  
+    ##                 
+    ##                 
+    ##                 
+    ## 
+    ## $versicolor
+    ##   Sepal.Length    Sepal.Width     Petal.Length   Petal.Width   
+    ##  Min.   :4.900   Min.   :2.000   Min.   :3.00   Min.   :1.000  
+    ##  1st Qu.:5.600   1st Qu.:2.525   1st Qu.:4.00   1st Qu.:1.200  
+    ##  Median :5.900   Median :2.800   Median :4.35   Median :1.300  
+    ##  Mean   :5.936   Mean   :2.770   Mean   :4.26   Mean   :1.326  
+    ##  3rd Qu.:6.300   3rd Qu.:3.000   3rd Qu.:4.60   3rd Qu.:1.500  
+    ##  Max.   :7.000   Max.   :3.400   Max.   :5.10   Max.   :1.800  
+    ##        Species  
+    ##  setosa    : 0  
+    ##  versicolor:50  
+    ##  virginica : 0  
+    ##                 
+    ##                 
+    ##                 
+    ## 
+    ## $virginica
+    ##   Sepal.Length    Sepal.Width     Petal.Length    Petal.Width   
+    ##  Min.   :4.900   Min.   :2.200   Min.   :4.500   Min.   :1.400  
+    ##  1st Qu.:6.225   1st Qu.:2.800   1st Qu.:5.100   1st Qu.:1.800  
+    ##  Median :6.500   Median :3.000   Median :5.550   Median :2.000  
+    ##  Mean   :6.588   Mean   :2.974   Mean   :5.552   Mean   :2.026  
+    ##  3rd Qu.:6.900   3rd Qu.:3.175   3rd Qu.:5.875   3rd Qu.:2.300  
+    ##  Max.   :7.900   Max.   :3.800   Max.   :6.900   Max.   :2.500  
+    ##        Species  
+    ##  setosa    : 0  
+    ##  versicolor: 0  
+    ##  virginica :50  
+    ##                 
+    ##                 
+    ##                 
+    ## 
+    ## attr(,"split_type")
+    ## [1] "data.frame"
+    ## attr(,"split_labels")
+    ##      Species
+    ## 1     setosa
+    ## 2 versicolor
+    ## 3  virginica
+
+Technically, this is not part of the tidyverse, but the inspiration for the tidyverse was built upon packages like **plyr**. Actually the `map()` functions in the tidyverse behave exactly the same:
+
+``` r
+map(iris, summary)
+```
+
+    ## $Sepal.Length
+    ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+    ##   4.300   5.100   5.800   5.843   6.400   7.900 
+    ## 
+    ## $Sepal.Width
+    ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+    ##   2.000   2.800   3.000   3.057   3.300   4.400 
+    ## 
+    ## $Petal.Length
+    ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+    ##   1.000   1.600   4.350   3.758   5.100   6.900 
+    ## 
+    ## $Petal.Width
+    ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+    ##   0.100   0.300   1.300   1.199   1.800   2.500 
+    ## 
+    ## $Species
+    ##     setosa versicolor  virginica 
+    ##         50         50         50
+
+``` r
+iris %>% split(.$Species) %>% map(summary)
+```
+
+    ## $setosa
+    ##   Sepal.Length    Sepal.Width     Petal.Length    Petal.Width   
+    ##  Min.   :4.300   Min.   :2.300   Min.   :1.000   Min.   :0.100  
+    ##  1st Qu.:4.800   1st Qu.:3.200   1st Qu.:1.400   1st Qu.:0.200  
+    ##  Median :5.000   Median :3.400   Median :1.500   Median :0.200  
+    ##  Mean   :5.006   Mean   :3.428   Mean   :1.462   Mean   :0.246  
+    ##  3rd Qu.:5.200   3rd Qu.:3.675   3rd Qu.:1.575   3rd Qu.:0.300  
+    ##  Max.   :5.800   Max.   :4.400   Max.   :1.900   Max.   :0.600  
+    ##        Species  
+    ##  setosa    :50  
+    ##  versicolor: 0  
+    ##  virginica : 0  
+    ##                 
+    ##                 
+    ##                 
+    ## 
+    ## $versicolor
+    ##   Sepal.Length    Sepal.Width     Petal.Length   Petal.Width   
+    ##  Min.   :4.900   Min.   :2.000   Min.   :3.00   Min.   :1.000  
+    ##  1st Qu.:5.600   1st Qu.:2.525   1st Qu.:4.00   1st Qu.:1.200  
+    ##  Median :5.900   Median :2.800   Median :4.35   Median :1.300  
+    ##  Mean   :5.936   Mean   :2.770   Mean   :4.26   Mean   :1.326  
+    ##  3rd Qu.:6.300   3rd Qu.:3.000   3rd Qu.:4.60   3rd Qu.:1.500  
+    ##  Max.   :7.000   Max.   :3.400   Max.   :5.10   Max.   :1.800  
+    ##        Species  
+    ##  setosa    : 0  
+    ##  versicolor:50  
+    ##  virginica : 0  
+    ##                 
+    ##                 
+    ##                 
+    ## 
+    ## $virginica
+    ##   Sepal.Length    Sepal.Width     Petal.Length    Petal.Width   
+    ##  Min.   :4.900   Min.   :2.200   Min.   :4.500   Min.   :1.400  
+    ##  1st Qu.:6.225   1st Qu.:2.800   1st Qu.:5.100   1st Qu.:1.800  
+    ##  Median :6.500   Median :3.000   Median :5.550   Median :2.000  
+    ##  Mean   :6.588   Mean   :2.974   Mean   :5.552   Mean   :2.026  
+    ##  3rd Qu.:6.900   3rd Qu.:3.175   3rd Qu.:5.875   3rd Qu.:2.300  
+    ##  Max.   :7.900   Max.   :3.800   Max.   :6.900   Max.   :2.500  
+    ##        Species  
+    ##  setosa    : 0  
+    ##  versicolor: 0  
+    ##  virginica :50  
+    ##                 
+    ##                 
+    ## 
+
+Just like the **plyr** functions indicate the input and output in the function name \*\*purrr\* functions are the same way. The `map()` function takes a list and returns a list. However, `map_df()` will take a list and try to return a `data.frame`, casting the value as a `data.frame` and binding together if possible.
+
+``` r
+iris %>% select_if(is.numeric) %>% map_df(summary)
+```
+
+    ## # A tibble: 6 x 4
+    ##   Sepal.Length Sepal.Width Petal.Length Petal.Width
+    ##          <dbl>       <dbl>        <dbl>       <dbl>
+    ## 1         4.30        2.00         1.00       0.100
+    ## 2         5.10        2.80         1.60       0.300
+    ## 3         5.80        3.00         4.35       1.30 
+    ## 4         5.84        3.06         3.76       1.20 
+    ## 5         6.40        3.30         5.10       1.80 
+    ## 6         7.90        4.40         6.90       2.50
+
+To show a more realistic example, let's say that we need to load the iris dataset and add a new column with the dataset number. Here is the loop way:
+
+``` r
+all_dat <- NULL
+for (i in 1:5){
+  this_iris <- iris
+  this_iris$dat_numb <- i
+  all_dat <- rbind(all_dat, this_iris)
+}
+```
+
+The tidyverse, **purrr** way would be:
+
+``` r
+map_df(1:5, ~as_tibble(mutate(iris, dat_numb=.)))
+```
+
+    ## # A tibble: 750 x 6
+    ##    Sepal.Length Sepal.Width Petal.Length Petal.Width Species dat_numb
+    ##           <dbl>       <dbl>        <dbl>       <dbl> <fct>      <int>
+    ##  1         5.10        3.50         1.40       0.200 setosa         1
+    ##  2         4.90        3.00         1.40       0.200 setosa         1
+    ##  3         4.70        3.20         1.30       0.200 setosa         1
+    ##  4         4.60        3.10         1.50       0.200 setosa         1
+    ##  5         5.00        3.60         1.40       0.200 setosa         1
+    ##  6         5.40        3.90         1.70       0.400 setosa         1
+    ##  7         4.60        3.40         1.40       0.300 setosa         1
+    ##  8         5.00        3.40         1.50       0.200 setosa         1
+    ##  9         4.40        2.90         1.40       0.200 setosa         1
+    ## 10         4.90        3.10         1.50       0.100 setosa         1
+    ## # ... with 740 more rows
+
+There are two reasons why this would be preferable: 1) It is shorter and 2) it's 10x slower to do it as a loop! The tradeoff is that you need to have a stronger grasp of how the function is operating.
+
 lubridate
 ---------
 
@@ -503,6 +834,3 @@ spread/gather
 
 rename\_all
 -----------
-
-map\_df
--------

@@ -300,6 +300,38 @@ messaged_mean(x=c(1:10,50), trim=0)
 messaged_mean(x=c(1:10,50), trim=.1)
 ```
 
+## Functions with a dot in the name
+
+You may notice that sometimes functions have a dot in the name. Most of the time 
+the package developer is trying to make the name more readable, but this is not 
+always the case. Look at the print function: 
+
+```{r}
+print
+```
+
+There's not much to the function and you can see that it includes those dots. This 
+is basically defining a function called "print" that takes an object and some other 
+unnamed arguments and does something. We're not sure what though. Now let's look 
+at the function `print.data.frame`:
+
+```{r}
+print.data.frame
+```
+
+You can see that whenever you print a `data.frame` you can control the number 
+of digits, quoting, etc. The body of the function contains the familiar logic of 
+what gets printed to the screen when you look at a data.frame. The `print()` 
+function is called a generic. When you run it R will look for a more specific version 
+of print that knows how to handle the specific object type that you passed to it. 
+In this case, it will print a data.frame according to the function `print.data.frame`. 
+A couple simple examples of this at work are: 
+
+```{r}
+print(head(iris))
+print(Sys.time())
+```
+
 ## Writing recursive functions
 
 It's possible to have functions call themselves! This is really hard to get your 
@@ -331,8 +363,100 @@ http://adv-r.had.co.nz/Functions.html#function-arguments
 
 # Tidyverse Tricks
 
+Before we get started, let's load some required packages.
+
+```{r, message=FALSE, warning=FALSE, error=FALSE}
+library(plyr)
+library(dplyr)
+library(purrr)
+library(lubridate)
+```
+
+## The new conditional select() and rename() functions
+
+In newer versions of `dplyr` you have even better version of `select()` and `rename()`. 
+Namely, `select_if`
+
+## The everything() function for selecting columns
+
+Also, don't forget about the handy function `everything()`. This literally selects 
+everything else that you haven't already grabbed in your `select()` function. This 
+is really handy when you want to re-order your columns or set things up for later reporting. 
+
+```{r}
+iris %>% 
+  select(Species, everything()) %>%
+  as_tibble()
+```
+
+
+## Using purrr's map() function
+
+You'll hear R users talk about vectorized functions and how they are more efficient 
+than running a loop. It's true that sometimes loops are necessary or they are 
+easier to read. However, if you're trying to perform the same operations on everything 
+in a `vector`, `list`, or row of a `data.frame`, then there are some functions to 
+help you. 
+
+In the old days, there was a package called `plyr`. It had functions that took a 
+specific type of input, then repeated an operation on each element. The documentation 
+for the `llply` function says it all: 
+> For each element of a list, apply function, keeping results as a list.
+
+```{r}
+llply(iris, summary)
+```
+
+If you have a `data.frame` and want to perform a function for each component of it, 
+then just use `dlply`: 
+
+```{r}
+dlply(iris, .(Species), summary)
+```
+
+Technically, this is not part of the tidyverse, but the inspiration for the tidyverse 
+was built upon packages like **plyr**. Actually the `map()` functions in the tidyverse 
+behave exactly the same: 
+
+```{r}
+map(iris, summary)
+iris %>% split(.$Species) %>% map(summary)
+```
+
+Just like the **plyr** functions indicate the input and output in the function name 
+**purrr* functions are the same way. The `map()` function takes a list and returns a list. 
+However, `map_df()` will take a list and try to return a `data.frame`, casting the 
+value as a `data.frame` and binding together if possible.
+
+```{r}
+iris %>% select_if(is.numeric) %>% map_df(summary)
+```
+
+To show a more realistic example, let's say that we need to load the iris dataset 
+and add a new column with the dataset number. Here is the loop way: 
+
+```{r}
+all_dat <- NULL
+for (i in 1:5){
+  this_iris <- iris
+  this_iris$dat_numb <- i
+  all_dat <- rbind(all_dat, this_iris)
+}
+```
+
+The tidyverse, **purrr** way would be: 
+
+```{r}
+map_df(1:5, ~as_tibble(mutate(iris, dat_numb=.)))
+```
+
+There are two reasons why this would be preferable: 1) It is shorter and 2) it's 10x 
+slower to do it as a loop! The tradeoff is that you need to have a stronger grasp of 
+how the function is operating.
+
+
+
 ## lubridate 
 ## group_by
 ## spread/gather
 ## rename_all
-## map_df
