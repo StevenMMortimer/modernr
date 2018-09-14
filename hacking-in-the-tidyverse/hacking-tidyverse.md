@@ -23,6 +23,7 @@ Steven M. Mortimer
     -   [Doing date arithmetic with lubridate](#doing-date-arithmetic-with-lubridate)
     -   [Calculating the duration between dates and times](#calculating-the-duration-between-dates-and-times)
     -   [Calculating the ratios/sizes of groups](#calculating-the-ratiossizes-of-groups)
+    -   [Calculations based on the first and last value in a set](#calculations-based-on-the-first-and-last-value-in-a-set)
 
 Functions
 =========
@@ -401,7 +402,7 @@ lm
     ##         z$qr <- NULL
     ##     z
     ## }
-    ## <bytecode: 0x7fa66e3f72e0>
+    ## <bytecode: 0x7feb699d2108>
     ## <environment: namespace:stats>
 
 They are provided to the `lm.fit()` or `lm.wfit()` functions. If you look at those functions using `?lm.fit`, you'll see that there are some arguments that we could be specifying in our original `lm()` call to control how things work. For exmaple, the `tol` argument can be specified.
@@ -467,7 +468,7 @@ print
 
     ## function (x, ...) 
     ## UseMethod("print")
-    ## <bytecode: 0x7fa66bca7108>
+    ## <bytecode: 0x7feb6868ec78>
     ## <environment: namespace:base>
 
 There's not much to the function and you can see that it includes those dots. This is basically defining a function called "print" that takes an object and some other unnamed arguments and does something. We're not sure what though. Now let's look at the function `print.data.frame`:
@@ -500,7 +501,7 @@ print.data.frame
     ##     }
     ##     invisible(x)
     ## }
-    ## <bytecode: 0x7fa66d5fe878>
+    ## <bytecode: 0x7feb6a0f3000>
     ## <environment: namespace:base>
 
 You can see that whenever you print a `data.frame` you can control the number of digits, quoting, etc. The body of the function contains the familiar logic of what gets printed to the screen when you look at a data.frame. The `print()` function is called a generic. When you run it R will look for a more specific version of print that knows how to handle the specific object type that you passed to it. In this case, it will print a data.frame according to the function `print.data.frame`. A couple simple examples of this at work are:
@@ -521,7 +522,7 @@ print(head(iris))
 print(Sys.time())
 ```
 
-    ## [1] "2018-09-13 21:44:11 EDT"
+    ## [1] "2018-09-13 22:17:00 EDT"
 
 Writing recursive functions
 ---------------------------
@@ -1041,3 +1042,98 @@ iris %>%
     ## 6 virginica  Yes                    6.             0.0400             5.60
 
 There are a few interesting components to this analysis. The first is the use of the function `complete()` which comes from the **tidyr** package. It will make all the missing combinations of a variable explicit and even comes with the option for how to fill in the values if missing. In this case, I specified that the count should be zero, which allows us to calculate the variable `pct_of_species_total`. The next interesting part of this flow is the second use of `group_by` which allows us to get the total count of observations within each species, so that we can gauge the percentage of below average sepal length flowers within each species. Lastly, it's always a good idea to invoke the function `ungroup()` because later calls to `mutate()` might not reflect what you expect!
+
+Calculations based on the first and last value in a set
+-------------------------------------------------------
+
+Sometimes you need to calculate something based on the first and last values in a group. This is a simplified example below, but let's say we needed to calculate the difference between the first and last values for each Species where the valuaes are arranged by `Sepal.Length` ascending.
+
+``` r
+iris %>% 
+  group_by(Species) %>% 
+  arrange(Sepal.Length) %>% 
+  summarize(diff = last(Sepal.Length) - first(Sepal.Length))
+```
+
+    ##   diff
+    ## 1  3.6
+
+You can confirm this because this operation is the same as calculating the difference between the min and max for each species.
+
+``` r
+iris %>% 
+  group_by(Species) %>% 
+  arrange(Sepal.Length) %>% 
+  summarize(diff = max(Sepal.Length) - min(Sepal.Length))
+```
+
+    ##   diff
+    ## 1  3.6
+
+An alternative to using the keyword functions `first()` and `last()` is using the `slice()` function which lets you aim for a specific index that can still be generalized to the nth value. Here we grab the 1st, 25th, and Nth (50th) values.
+
+``` r
+iris %>% 
+  select(Species, Sepal.Length) %>%
+  group_by(Species) %>% 
+  arrange(Sepal.Length) %>% 
+  filter(row_number() %in% c(1, 25, n(), 99))
+```
+
+    ## # A tibble: 9 x 2
+    ## # Groups:   Species [3]
+    ##   Species    Sepal.Length
+    ##   <fct>             <dbl>
+    ## 1 setosa             4.30
+    ## 2 versicolor         4.90
+    ## 3 virginica          4.90
+    ## 4 setosa             5.00
+    ## 5 setosa             5.80
+    ## 6 versicolor         5.90
+    ## 7 virginica          6.50
+    ## 8 versicolor         7.00
+    ## 9 virginica          7.90
+
+To get another perspective you can arrange by the species.
+
+``` r
+iris %>% 
+  select(Species, Sepal.Length) %>%
+  group_by(Species) %>% 
+  arrange(Sepal.Length) %>% 
+  filter(row_number() %in% c(1, 25, n(), 99)) %>% 
+  arrange(Species)
+```
+
+    ## # A tibble: 9 x 2
+    ## # Groups:   Species [3]
+    ##   Species    Sepal.Length
+    ##   <fct>             <dbl>
+    ## 1 setosa             4.30
+    ## 2 setosa             5.00
+    ## 3 setosa             5.80
+    ## 4 versicolor         4.90
+    ## 5 versicolor         5.90
+    ## 6 versicolor         7.00
+    ## 7 virginica          4.90
+    ## 8 virginica          6.50
+    ## 9 virginica          7.90
+
+``` r
+# and double check with summary
+iris %>% 
+  split(.$Species) %>% 
+  map(~summary(.$Sepal.Length)[c('Min.','Median','Max.')])
+```
+
+    ## $setosa
+    ##   Min. Median   Max. 
+    ##    4.3    5.0    5.8 
+    ## 
+    ## $versicolor
+    ##   Min. Median   Max. 
+    ##    4.9    5.9    7.0 
+    ## 
+    ## $virginica
+    ##   Min. Median   Max. 
+    ##    4.9    6.5    7.9

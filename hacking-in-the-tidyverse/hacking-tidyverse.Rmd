@@ -574,3 +574,55 @@ the total count of observations within each species, so that we can gauge the pe
 of below average sepal length flowers within each species. Lastly, it's always a 
 good idea to invoke the function `ungroup()` because later calls to `mutate()` might 
 not reflect what you expect!
+
+## Calculations based on the first and last value in a set
+
+Sometimes you need to calculate something based on the first and last values in a group. 
+This is a simplified example below, but let's say we needed to calculate the difference 
+between the first and last values for each Species where the valuaes are arranged 
+by `Sepal.Length` ascending. 
+
+```{r}
+iris %>% 
+  group_by(Species) %>% 
+  arrange(Sepal.Length) %>% 
+  summarize(diff = last(Sepal.Length) - first(Sepal.Length))
+```
+
+You can confirm this because this operation is the same as calculating the difference 
+between the min and max for each species.
+
+```{r}
+iris %>% 
+  group_by(Species) %>% 
+  arrange(Sepal.Length) %>% 
+  summarize(diff = max(Sepal.Length) - min(Sepal.Length))
+```
+
+An alternative to using the keyword functions `first()` and `last()` is using the 
+`slice()` function which lets you aim for a specific index that can still be generalized 
+to the nth value. Here we grab the 1st, 25th, and Nth (50th) values.
+
+```{r}
+iris %>% 
+  select(Species, Sepal.Length) %>%
+  group_by(Species) %>% 
+  arrange(Sepal.Length) %>% 
+  filter(row_number() %in% c(1, 25, n(), 99))
+```
+
+To get another perspective you can arrange by the species. 
+
+```{r}
+iris %>% 
+  select(Species, Sepal.Length) %>%
+  group_by(Species) %>% 
+  arrange(Sepal.Length) %>% 
+  filter(row_number() %in% c(1, 25, n(), 99)) %>% 
+  arrange(Species)
+
+# and double check with summary
+iris %>% 
+  split(.$Species) %>% 
+  map(~summary(.$Sepal.Length)[c('Min.','Median','Max.')])
+```
