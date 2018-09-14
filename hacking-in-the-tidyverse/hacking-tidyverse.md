@@ -16,13 +16,14 @@ Steven M. Mortimer
     -   [Functions with a dot in the name](#functions-with-a-dot-in-the-name)
     -   [Writing recursive functions](#writing-recursive-functions)
 -   [Tidyverse Tricks](#tidyverse-tricks)
-    -   [The new conditional select() and rename() functions](#the-new-conditional-select-and-rename-functions)
+    -   [The new select\_*() and rename\_*() functions](#the-new-select_-and-rename_-functions)
     -   [The everything() function for selecting columns](#the-everything-function-for-selecting-columns)
     -   [Using purrr's map() function](#using-purrrs-map-function)
+    -   [Using the modify() function](#using-the-modify-function)
+    -   [Doing date arithmetic with lubridate](#doing-date-arithmetic-with-lubridate)
     -   [lubridate](#lubridate)
     -   [group\_by](#group_by)
     -   [spread/gather](#spreadgather)
-    -   [rename\_all](#rename_all)
 
 Functions
 =========
@@ -401,7 +402,7 @@ lm
     ##         z$qr <- NULL
     ##     z
     ## }
-    ## <bytecode: 0x7fb4b8169350>
+    ## <bytecode: 0x7fdeacc6c000>
     ## <environment: namespace:stats>
 
 They are provided to the `lm.fit()` or `lm.wfit()` functions. If you look at those functions using `?lm.fit`, you'll see that there are some arguments that we could be specifying in our original `lm()` call to control how things work. For exmaple, the `tol` argument can be specified.
@@ -467,7 +468,7 @@ print
 
     ## function (x, ...) 
     ## UseMethod("print")
-    ## <bytecode: 0x7fb4b7137518>
+    ## <bytecode: 0x7fdead069c70>
     ## <environment: namespace:base>
 
 There's not much to the function and you can see that it includes those dots. This is basically defining a function called "print" that takes an object and some other unnamed arguments and does something. We're not sure what though. Now let's look at the function `print.data.frame`:
@@ -500,7 +501,7 @@ print.data.frame
     ##     }
     ##     invisible(x)
     ## }
-    ## <bytecode: 0x7fb4b820a0a0>
+    ## <bytecode: 0x7fdead86b040>
     ## <environment: namespace:base>
 
 You can see that whenever you print a `data.frame` you can control the number of digits, quoting, etc. The body of the function contains the familiar logic of what gets printed to the screen when you look at a data.frame. The `print()` function is called a generic. When you run it R will look for a more specific version of print that knows how to handle the specific object type that you passed to it. In this case, it will print a data.frame according to the function `print.data.frame`. A couple simple examples of this at work are:
@@ -521,7 +522,7 @@ print(head(iris))
 print(Sys.time())
 ```
 
-    ## [1] "2018-09-13 16:50:23 EDT"
+    ## [1] "2018-09-13 20:50:58 EDT"
 
 Writing recursive functions
 ---------------------------
@@ -569,17 +570,60 @@ library(plyr)
 library(dplyr)
 library(purrr)
 library(lubridate)
+library(nycflights13)
 ```
 
-The new conditional select() and rename() functions
----------------------------------------------------
+The new select\_*() and rename\_*() functions
+---------------------------------------------
 
-In newer versions of `dplyr` you have even better version of `select()` and `rename()`. Namely, `select_if`
+In newer versions of `dplyr` you have even better version of `select()` and `rename()`. These functions pretty much explain themselves, but I'll include some examples.
+
+**Code Snippet**: Convert all column names to snake case
+
+``` r
+# only select the factor columns
+as_tibble(iris) %>% select_if(is.factor)
+```
+
+    ## # A tibble: 150 x 1
+    ##    Species
+    ##    <fct>  
+    ##  1 setosa 
+    ##  2 setosa 
+    ##  3 setosa 
+    ##  4 setosa 
+    ##  5 setosa 
+    ##  6 setosa 
+    ##  7 setosa 
+    ##  8 setosa 
+    ##  9 setosa 
+    ## 10 setosa 
+    ## # ... with 140 more rows
+
+``` r
+# rename everything to make column names tidy
+as_tibble(iris) %>% rename_all(~gsub('\\.', '_', tolower(.)))
+```
+
+    ## # A tibble: 150 x 5
+    ##    sepal_length sepal_width petal_length petal_width species
+    ##           <dbl>       <dbl>        <dbl>       <dbl> <fct>  
+    ##  1         5.10        3.50         1.40       0.200 setosa 
+    ##  2         4.90        3.00         1.40       0.200 setosa 
+    ##  3         4.70        3.20         1.30       0.200 setosa 
+    ##  4         4.60        3.10         1.50       0.200 setosa 
+    ##  5         5.00        3.60         1.40       0.200 setosa 
+    ##  6         5.40        3.90         1.70       0.400 setosa 
+    ##  7         4.60        3.40         1.40       0.300 setosa 
+    ##  8         5.00        3.40         1.50       0.200 setosa 
+    ##  9         4.40        2.90         1.40       0.200 setosa 
+    ## 10         4.90        3.10         1.50       0.100 setosa 
+    ## # ... with 140 more rows
 
 The everything() function for selecting columns
 -----------------------------------------------
 
-Also, don't forget about the handy function `everything()`. This literally selects everything else that you haven't already grabbed in your `select()` function. This is really handy when you want to re-order your columns or set things up for later reporting.
+Also, don't forget about the handy function `everything()`. This literally selects every other column that you haven't already grabbed in your `select()` function. This is really handy when you want to re-order your columns or set things up for later reporting.
 
 ``` r
 iris %>% 
@@ -823,6 +867,81 @@ map_df(1:5, ~as_tibble(mutate(iris, dat_numb=.)))
 
 There are two reasons why this would be preferable: 1) It is shorter and 2) it's 10x slower to do it as a loop! The tradeoff is that you need to have a stronger grasp of how the function is operating.
 
+Using the modify() function
+---------------------------
+
+The `map()` function is inherently useful for processing lists or creating a list output. If you have a `data.frame` and just want to modify it in place, then you might be more interested in the function called `modify()`. It will take in something, transform it in place, and then spit it back out.
+
+**Code Snippet**: Convert all factors in a `data.frame` to characters.
+
+``` r
+as_tibble(iris) %>% modify_if(is.factor, as.character)
+```
+
+    ## # A tibble: 150 x 5
+    ##    Sepal.Length Sepal.Width Petal.Length Petal.Width Species
+    ##           <dbl>       <dbl>        <dbl>       <dbl> <chr>  
+    ##  1         5.10        3.50         1.40       0.200 setosa 
+    ##  2         4.90        3.00         1.40       0.200 setosa 
+    ##  3         4.70        3.20         1.30       0.200 setosa 
+    ##  4         4.60        3.10         1.50       0.200 setosa 
+    ##  5         5.00        3.60         1.40       0.200 setosa 
+    ##  6         5.40        3.90         1.70       0.400 setosa 
+    ##  7         4.60        3.40         1.40       0.300 setosa 
+    ##  8         5.00        3.40         1.50       0.200 setosa 
+    ##  9         4.40        2.90         1.40       0.200 setosa 
+    ## 10         4.90        3.10         1.50       0.100 setosa 
+    ## # ... with 140 more rows
+
+Doing date arithmetic with lubridate
+------------------------------------
+
+Dates are inherently weird. I highly recommend using the **lubridate** package for anything date related. It handles most all cases with ease. You should already be familiar with functions like `mdy()`, `ymd()`, `ymd_hms()`, and more. However, the arithmetic functions are amazingly useful and wrappers to specify units of time, like `months()`, `days()`, `minutes()`. They will automatically account for weird inconsistencies in the calendar like leap year, differing days in a month, etc.
+
+**Code Snippet**: Get The last day of every month in a year
+
+``` r
+ymd('2016-01-01') + months(1:12) - days(1)
+```
+
+    ##  [1] "2016-01-31" "2016-02-29" "2016-03-31" "2016-04-30" "2016-05-31"
+    ##  [6] "2016-06-30" "2016-07-31" "2016-08-31" "2016-09-30" "2016-10-31"
+    ## [11] "2016-11-30" "2016-12-31"
+
+Another example are the functions `%m+%` and `%m-%`. This will add months to a date without creating a date that doesn't make sense.
+
+``` r
+as.Date('2018-01-31') + months(1)
+```
+
+    ## [1] NA
+
+``` r
+as.Date('2018-01-31') %m+% months(1)
+```
+
+    ## [1] "2018-02-28"
+
+``` r
+as.Date('2018-03-30') %m-% months(1)
+```
+
+    ## [1] "2018-02-28"
+
+Another product of **lubridate** is the object type `interval`. You can create one using `%--%` and supplying two dates or timestamps. In the example below we'll create
+
+``` r
+our_flights <- flights %>% 
+  select(year, month, day, dep_time, sched_dep_time, dep_delay) %>%
+  mutate(dep_timestamp = ymd_hms(sprintf('%04d%02d%02d %04d00', year, month, day, dep_time)), 
+         sched_dep_timestamp = dep_timestamp - minutes(dep_delay), 
+         dep_delay_interval = sched_dep_timestamp %--% dep_timestamp)
+```
+
+    ## Warning: 8255 failed to parse.
+
+**Code Snippet**: Convert all column names to snake case
+
 lubridate
 ---------
 
@@ -831,6 +950,3 @@ group\_by
 
 spread/gather
 -------------
-
-rename\_all
------------

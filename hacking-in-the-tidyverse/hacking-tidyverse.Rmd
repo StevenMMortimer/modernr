@@ -370,17 +370,27 @@ library(plyr)
 library(dplyr)
 library(purrr)
 library(lubridate)
+library(nycflights13)
 ```
 
-## The new conditional select() and rename() functions
+## The new select_*() and rename_*() functions
 
 In newer versions of `dplyr` you have even better version of `select()` and `rename()`. 
-Namely, `select_if`
+These functions pretty much explain themselves, but I'll include some examples.
+
+**Code Snippet**: Convert all column names to snake case
+
+```{r}
+# only select the factor columns
+as_tibble(iris) %>% select_if(is.factor)
+# rename everything to make column names tidy
+as_tibble(iris) %>% rename_all(~gsub('\\.', '_', tolower(.)))
+```
 
 ## The everything() function for selecting columns
 
 Also, don't forget about the handy function `everything()`. This literally selects 
-everything else that you haven't already grabbed in your `select()` function. This 
+every other column that you haven't already grabbed in your `select()` function. This 
 is really handy when you want to re-order your columns or set things up for later reporting. 
 
 ```{r}
@@ -454,9 +464,58 @@ There are two reasons why this would be preferable: 1) It is shorter and 2) it's
 slower to do it as a loop! The tradeoff is that you need to have a stronger grasp of 
 how the function is operating.
 
+## Using the modify() function
+
+The `map()` function is inherently useful for processing lists or creating a list output. 
+If you have a `data.frame` and just want to modify it in place, then you might be more 
+interested in the function called `modify()`. It will take in something, transform it in place, 
+and then spit it back out. 
+
+**Code Snippet**: Convert all factors in a `data.frame` to characters. 
+
+```{r}
+as_tibble(iris) %>% modify_if(is.factor, as.character)
+```
+
+## Doing date arithmetic with lubridate
+
+Dates are inherently weird. I highly recommend using the **lubridate** package for 
+anything date related. It handles most all cases with ease. You should already be 
+familiar with functions like `mdy()`, `ymd()`, `ymd_hms()`, and more. However, the 
+arithmetic functions are amazingly useful and wrappers to specify units of time, like 
+`months()`, `days()`, `minutes()`. They will automatically account for weird 
+inconsistencies in the calendar like leap year, differing days in a month, etc. 
+
+**Code Snippet**: Get The last day of every month in a year
+
+```{r}
+ymd('2016-01-01') + months(1:12) - days(1)
+```
+
+Another example are the functions `%m+%` and `%m-%`. This will add months to a date 
+without creating a date that doesn't make sense.
+
+```{r}
+as.Date('2018-01-31') + months(1)
+as.Date('2018-01-31') %m+% months(1)
+as.Date('2018-03-30') %m-% months(1)
+```
+
+Another product of **lubridate** is the object type `interval`. You can create one 
+using `%--%` and supplying two dates or timestamps. In the example below we'll 
+create 
+
+```{r}
+our_flights <- flights %>% 
+  select(year, month, day, dep_time, sched_dep_time, dep_delay) %>%
+  mutate(dep_timestamp = ymd_hms(sprintf('%04d%02d%02d %04d00', year, month, day, dep_time)), 
+         sched_dep_timestamp = dep_timestamp - minutes(dep_delay), 
+         dep_delay_interval = sched_dep_timestamp %--% dep_timestamp)
+```
+
+**Code Snippet**: Convert all column names to snake case
 
 
 ## lubridate 
 ## group_by
 ## spread/gather
-## rename_all
