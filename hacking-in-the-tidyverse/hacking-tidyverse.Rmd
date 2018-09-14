@@ -27,7 +27,9 @@ Examples:
  
  - **dplyr** - `mutate()`, `select()`, `sample()`, `slice()`
  - **httr** - `GET()`, `POST()`, `PUT()`, `PATCH()`  
- vs.  
+ 
+ vs. 
+ 
  - **dplyr** - `diamonds`, `mtcars`, `nycflights13`
 
 ## Basic function structure
