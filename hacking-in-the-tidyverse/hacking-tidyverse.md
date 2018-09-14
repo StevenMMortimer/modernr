@@ -402,7 +402,7 @@ lm
     ##         z$qr <- NULL
     ##     z
     ## }
-    ## <bytecode: 0x7f96b21f6320>
+    ## <bytecode: 0x7fa49ee42840>
     ## <environment: namespace:stats>
 
 They are provided to the `lm.fit()` or `lm.wfit()` functions. If you look at those functions using `?lm.fit`, you'll see that there are some arguments that we could be specifying in our original `lm()` call to control how things work. For exmaple, the `tol` argument can be specified.
@@ -468,7 +468,7 @@ print
 
     ## function (x, ...) 
     ## UseMethod("print")
-    ## <bytecode: 0x7f96b20d6778>
+    ## <bytecode: 0x7fa49eb42d78>
     ## <environment: namespace:base>
 
 There's not much to the function and you can see that it includes those dots. This is basically defining a function called "print" that takes an object and some other unnamed arguments and does something. We're not sure what though. Now let's look at the function `print.data.frame`:
@@ -501,7 +501,7 @@ print.data.frame
     ##     }
     ##     invisible(x)
     ## }
-    ## <bytecode: 0x7f96b0d79190>
+    ## <bytecode: 0x7fa4a0ae3188>
     ## <environment: namespace:base>
 
 You can see that whenever you print a `data.frame` you can control the number of digits, quoting, etc. The body of the function contains the familiar logic of what gets printed to the screen when you look at a data.frame. The `print()` function is called a generic. When you run it R will look for a more specific version of print that knows how to handle the specific object type that you passed to it. In this case, it will print a data.frame according to the function `print.data.frame`. A couple simple examples of this at work are:
@@ -522,7 +522,7 @@ print(head(iris))
 print(Sys.time())
 ```
 
-    ## [1] "2018-09-13 22:27:30 EDT"
+    ## [1] "2018-09-13 22:29:13 EDT"
 
 Writing recursive functions
 ---------------------------
