@@ -16,14 +16,13 @@ Steven M. Mortimer
     -   [Functions with a dot in the name](#functions-with-a-dot-in-the-name)
     -   [Writing recursive functions](#writing-recursive-functions)
 -   [Tidyverse Tricks](#tidyverse-tricks)
-    -   [The new select\_*() and rename\_*() functions](#the-new-select_-and-rename_-functions)
+    -   [The new select() and rename() functions](#the-new-select-and-rename-functions)
     -   [The everything() function for selecting columns](#the-everything-function-for-selecting-columns)
     -   [Using purrr's map() function](#using-purrrs-map-function)
     -   [Using the modify() function](#using-the-modify-function)
     -   [Doing date arithmetic with lubridate](#doing-date-arithmetic-with-lubridate)
-    -   [lubridate](#lubridate)
-    -   [group\_by](#group_by)
-    -   [spread/gather](#spreadgather)
+    -   [Calculating the duration between dates and times](#calculating-the-duration-between-dates-and-times)
+    -   [Calculating the ratios/sizes of groups](#calculating-the-ratiossizes-of-groups)
 
 Functions
 =========
@@ -402,7 +401,7 @@ lm
     ##         z$qr <- NULL
     ##     z
     ## }
-    ## <bytecode: 0x7fdeacc6c000>
+    ## <bytecode: 0x7fa66e3f72e0>
     ## <environment: namespace:stats>
 
 They are provided to the `lm.fit()` or `lm.wfit()` functions. If you look at those functions using `?lm.fit`, you'll see that there are some arguments that we could be specifying in our original `lm()` call to control how things work. For exmaple, the `tol` argument can be specified.
@@ -468,7 +467,7 @@ print
 
     ## function (x, ...) 
     ## UseMethod("print")
-    ## <bytecode: 0x7fdead069c70>
+    ## <bytecode: 0x7fa66bca7108>
     ## <environment: namespace:base>
 
 There's not much to the function and you can see that it includes those dots. This is basically defining a function called "print" that takes an object and some other unnamed arguments and does something. We're not sure what though. Now let's look at the function `print.data.frame`:
@@ -501,7 +500,7 @@ print.data.frame
     ##     }
     ##     invisible(x)
     ## }
-    ## <bytecode: 0x7fdead86b040>
+    ## <bytecode: 0x7fa66d5fe878>
     ## <environment: namespace:base>
 
 You can see that whenever you print a `data.frame` you can control the number of digits, quoting, etc. The body of the function contains the familiar logic of what gets printed to the screen when you look at a data.frame. The `print()` function is called a generic. When you run it R will look for a more specific version of print that knows how to handle the specific object type that you passed to it. In this case, it will print a data.frame according to the function `print.data.frame`. A couple simple examples of this at work are:
@@ -522,7 +521,7 @@ print(head(iris))
 print(Sys.time())
 ```
 
-    ## [1] "2018-09-13 20:50:58 EDT"
+    ## [1] "2018-09-13 21:44:11 EDT"
 
 Writing recursive functions
 ---------------------------
@@ -568,13 +567,14 @@ Before we get started, let's load some required packages.
 ``` r
 library(plyr)
 library(dplyr)
+library(tidyr)
 library(purrr)
 library(lubridate)
 library(nycflights13)
 ```
 
-The new select\_*() and rename\_*() functions
----------------------------------------------
+The new select() and rename() functions
+---------------------------------------
 
 In newer versions of `dplyr` you have even better version of `select()` and `rename()`. These functions pretty much explain themselves, but I'll include some examples.
 
@@ -908,7 +908,7 @@ ymd('2016-01-01') + months(1:12) - days(1)
     ##  [6] "2016-06-30" "2016-07-31" "2016-08-31" "2016-09-30" "2016-10-31"
     ## [11] "2016-11-30" "2016-12-31"
 
-Another example are the functions `%m+%` and `%m-%`. This will add months to a date without creating a date that doesn't make sense.
+However, the date aware wrapper functions aren't fool proof. The functions `%m+%` and `%m-%`. This will add months to a date without creating a date that doesn't make sense.
 
 ``` r
 as.Date('2018-01-31') + months(1)
@@ -928,25 +928,116 @@ as.Date('2018-03-30') %m-% months(1)
 
     ## [1] "2018-02-28"
 
-Another product of **lubridate** is the object type `interval`. You can create one using `%--%` and supplying two dates or timestamps. In the example below we'll create
+Calculating the duration between dates and times
+------------------------------------------------
+
+Another cool feature of **lubridate** is the object type `interval`. You can create one using `%--%` and supplying two dates or timestamps. In the example below we'll create an interval and show that it can quickly produce the delay time.
 
 ``` r
 our_flights <- flights %>% 
   select(year, month, day, dep_time, sched_dep_time, dep_delay) %>%
   mutate(dep_timestamp = ymd_hms(sprintf('%04d%02d%02d %04d00', year, month, day, dep_time)), 
          sched_dep_timestamp = dep_timestamp - minutes(dep_delay), 
-         dep_delay_interval = sched_dep_timestamp %--% dep_timestamp)
+         dep_delay_interval = sched_dep_timestamp %--% dep_timestamp) %>%
+    select(dep_delay_interval, dep_delay)
+our_flights
 ```
 
-    ## Warning: 8255 failed to parse.
+    ## # A tibble: 336,776 x 2
+    ##    dep_delay_interval                               dep_delay
+    ##    <S4: Interval>                                       <dbl>
+    ##  1 2013-01-01 05:15:00 UTC--2013-01-01 05:17:00 UTC        2.
+    ##  2 2013-01-01 05:29:00 UTC--2013-01-01 05:33:00 UTC        4.
+    ##  3 2013-01-01 05:40:00 UTC--2013-01-01 05:42:00 UTC        2.
+    ##  4 2013-01-01 05:45:00 UTC--2013-01-01 05:44:00 UTC       -1.
+    ##  5 2013-01-01 06:00:00 UTC--2013-01-01 05:54:00 UTC       -6.
+    ##  6 2013-01-01 05:58:00 UTC--2013-01-01 05:54:00 UTC       -4.
+    ##  7 2013-01-01 06:00:00 UTC--2013-01-01 05:55:00 UTC       -5.
+    ##  8 2013-01-01 06:00:00 UTC--2013-01-01 05:57:00 UTC       -3.
+    ##  9 2013-01-01 06:00:00 UTC--2013-01-01 05:57:00 UTC       -3.
+    ## 10 2013-01-01 06:00:00 UTC--2013-01-01 05:58:00 UTC       -2.
+    ## # ... with 336,766 more rows
 
-**Code Snippet**: Convert all column names to snake case
+**Code Snippet**: Find the time in seconds between two timestamps
 
-lubridate
----------
+``` r
+our_flights %>% 
+  mutate(calculated_delay = as.duration(dep_delay_interval) / dminutes(1), 
+         calc_delay_secs =  as.duration(dep_delay_interval) / dseconds(1))
+```
 
-group\_by
----------
+    ## # A tibble: 336,776 x 4
+    ##    dep_delay_interval                               dep_delay
+    ##    <S4: Interval>                                       <dbl>
+    ##  1 2013-01-01 05:15:00 UTC--2013-01-01 05:17:00 UTC        2.
+    ##  2 2013-01-01 05:29:00 UTC--2013-01-01 05:33:00 UTC        4.
+    ##  3 2013-01-01 05:40:00 UTC--2013-01-01 05:42:00 UTC        2.
+    ##  4 2013-01-01 05:45:00 UTC--2013-01-01 05:44:00 UTC       -1.
+    ##  5 2013-01-01 06:00:00 UTC--2013-01-01 05:54:00 UTC       -6.
+    ##  6 2013-01-01 05:58:00 UTC--2013-01-01 05:54:00 UTC       -4.
+    ##  7 2013-01-01 06:00:00 UTC--2013-01-01 05:55:00 UTC       -5.
+    ##  8 2013-01-01 06:00:00 UTC--2013-01-01 05:57:00 UTC       -3.
+    ##  9 2013-01-01 06:00:00 UTC--2013-01-01 05:57:00 UTC       -3.
+    ## 10 2013-01-01 06:00:00 UTC--2013-01-01 05:58:00 UTC       -2.
+    ## # ... with 336,766 more rows, and 2 more variables:
+    ## #   calculated_delay <dbl>, calc_delay_secs <dbl>
 
-spread/gather
--------------
+A simpler example can be done using dates.
+
+``` r
+this_interval <- as.Date('2018-01-01') %--% as.Date('2018-02-28')
+as.duration(this_interval) / dweeks(1)
+```
+
+    ## [1] 8.285714
+
+``` r
+as.duration(this_interval) / ddays(1)
+```
+
+    ## [1] 58
+
+``` r
+as.duration(this_interval) / dseconds(1) # confirm it equals 58*24*60*60
+```
+
+    ## [1] 5011200
+
+Calculating the ratios/sizes of groups
+--------------------------------------
+
+You are probably already familiar with using the `group_by` function to calculate a summary statistic for different values. However, it is often useful to `group_by` multiple levels if segmenting by multiple variables to gain an understanding of how the data is allocated within each variable. The example below calculates for each species of flower in the iris dataset, how many are below the average sepal length of the entire dataset and then the average of those flowers.
+
+``` r
+# for reference
+mean(iris$Sepal.Length)
+```
+
+    ## [1] 5.843333
+
+``` r
+iris %>%
+  mutate(below_avg_sepal_length = as.factor(ifelse(Sepal.Length < mean(.$Sepal.Length),
+                                                   "Yes", "No"))) %>%
+  group_by(Species, below_avg_sepal_length) %>%
+  dplyr::summarize(n = n(), 
+                   avg_sepal_length = mean(Sepal.Length)) %>%
+  complete(below_avg_sepal_length,
+           fill = list(n = 0)) %>%
+  group_by(Species) %>%
+  mutate(pct_of_species_total = n / sum(n)) %>%
+  ungroup() %>%
+  select(Species, below_avg_sepal_length, n, pct_of_species_total, everything())
+```
+
+    ## # A tibble: 6 x 5
+    ##   Species    below_avg_sepal_le…     n pct_of_species_to… avg_sepal_length
+    ##   <fct>      <fct>               <dbl>              <dbl>            <dbl>
+    ## 1 setosa     No                     0.             0.                NA   
+    ## 2 setosa     Yes                   50.             0.333              5.01
+    ## 3 versicolor No                    26.             0.173              6.34
+    ## 4 versicolor Yes                   24.             0.160              5.50
+    ## 5 virginica  No                    44.             0.293              6.72
+    ## 6 virginica  Yes                    6.             0.0400             5.60
+
+There are a few interesting components to this analysis. The first is the use of the function `complete()` which comes from the **tidyr** package. It will make all the missing combinations of a variable explicit and even comes with the option for how to fill in the values if missing. In this case, I specified that the count should be zero, which allows us to calculate the variable `pct_of_species_total`. The next interesting part of this flow is the second use of `group_by` which allows us to get the total count of observations within each species, so that we can gauge the percentage of below average sepal length flowers within each species. Lastly, it's always a good idea to invoke the function `ungroup()` because later calls to `mutate()` might not reflect what you expect!
