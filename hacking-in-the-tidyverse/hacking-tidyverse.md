@@ -402,7 +402,7 @@ lm
     ##         z$qr <- NULL
     ##     z
     ## }
-    ## <bytecode: 0x7feb699d2108>
+    ## <bytecode: 0x7f96b21f6320>
     ## <environment: namespace:stats>
 
 They are provided to the `lm.fit()` or `lm.wfit()` functions. If you look at those functions using `?lm.fit`, you'll see that there are some arguments that we could be specifying in our original `lm()` call to control how things work. For exmaple, the `tol` argument can be specified.
@@ -468,7 +468,7 @@ print
 
     ## function (x, ...) 
     ## UseMethod("print")
-    ## <bytecode: 0x7feb6868ec78>
+    ## <bytecode: 0x7f96b20d6778>
     ## <environment: namespace:base>
 
 There's not much to the function and you can see that it includes those dots. This is basically defining a function called "print" that takes an object and some other unnamed arguments and does something. We're not sure what though. Now let's look at the function `print.data.frame`:
@@ -501,7 +501,7 @@ print.data.frame
     ##     }
     ##     invisible(x)
     ## }
-    ## <bytecode: 0x7feb6a0f3000>
+    ## <bytecode: 0x7f96b0d79190>
     ## <environment: namespace:base>
 
 You can see that whenever you print a `data.frame` you can control the number of digits, quoting, etc. The body of the function contains the familiar logic of what gets printed to the screen when you look at a data.frame. The `print()` function is called a generic. When you run it R will look for a more specific version of print that knows how to handle the specific object type that you passed to it. In this case, it will print a data.frame according to the function `print.data.frame`. A couple simple examples of this at work are:
@@ -522,7 +522,7 @@ print(head(iris))
 print(Sys.time())
 ```
 
-    ## [1] "2018-09-13 22:17:00 EDT"
+    ## [1] "2018-09-13 22:27:30 EDT"
 
 Writing recursive functions
 ---------------------------
@@ -583,7 +583,8 @@ In newer versions of `dplyr` you have even better version of `select()` and `ren
 
 ``` r
 # only select the factor columns
-as_tibble(iris) %>% select_if(is.factor)
+as_tibble(iris) %>% 
+  select_if(is.factor)
 ```
 
     ## # A tibble: 150 x 1
@@ -603,7 +604,8 @@ as_tibble(iris) %>% select_if(is.factor)
 
 ``` r
 # rename everything to make column names tidy
-as_tibble(iris) %>% rename_all(~gsub('\\.', '_', tolower(.)))
+as_tibble(iris) %>% 
+  rename_all(~gsub('\\.', '_', tolower(.)))
 ```
 
     ## # A tibble: 150 x 5
@@ -767,7 +769,9 @@ map(iris, summary)
     ##         50         50         50
 
 ``` r
-iris %>% split(.$Species) %>% map(summary)
+iris %>% 
+  split(.$Species) %>% 
+  map(summary)
 ```
 
     ## $setosa
@@ -821,18 +825,25 @@ iris %>% split(.$Species) %>% map(summary)
 Just like the **plyr** functions indicate the input and output in the function name \*\*purrr\* functions are the same way. The `map()` function takes a list and returns a list. However, `map_df()` will take a list and try to return a `data.frame`, casting the value as a `data.frame` and binding together if possible.
 
 ``` r
-iris %>% select_if(is.numeric) %>% map_df(summary)
+iris %>% 
+  select_if(is.numeric) %>% 
+  map_df(mean)
 ```
 
-    ## # A tibble: 6 x 4
+    ## # A tibble: 1 x 4
     ##   Sepal.Length Sepal.Width Petal.Length Petal.Width
     ##          <dbl>       <dbl>        <dbl>       <dbl>
-    ## 1         4.30        2.00         1.00       0.100
-    ## 2         5.10        2.80         1.60       0.300
-    ## 3         5.80        3.00         4.35       1.30 
-    ## 4         5.84        3.06         3.76       1.20 
-    ## 5         6.40        3.30         5.10       1.80 
-    ## 6         7.90        4.40         6.90       2.50
+    ## 1         5.84        3.06         3.76        1.20
+
+``` r
+# an equivalent way is
+iris %>% 
+  select_if(is.numeric) %>% 
+  summarize_all(mean)
+```
+
+    ##   Sepal.Length Sepal.Width Petal.Length Petal.Width
+    ## 1     5.843333    3.057333        3.758    1.199333
 
 To show a more realistic example, let's say that we need to load the iris dataset and add a new column with the dataset number. Here is the loop way:
 
@@ -876,7 +887,8 @@ The `map()` function is inherently useful for processing lists or creating a lis
 **Code Snippet**: Convert all factors in a `data.frame` to characters.
 
 ``` r
-as_tibble(iris) %>% modify_if(is.factor, as.character)
+as_tibble(iris) %>% 
+  modify_if(is.factor, as.character)
 ```
 
     ## # A tibble: 150 x 5

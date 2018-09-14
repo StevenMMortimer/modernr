@@ -383,9 +383,12 @@ These functions pretty much explain themselves, but I'll include some examples.
 
 ```{r}
 # only select the factor columns
-as_tibble(iris) %>% select_if(is.factor)
+as_tibble(iris) %>% 
+  select_if(is.factor)
+
 # rename everything to make column names tidy
-as_tibble(iris) %>% rename_all(~gsub('\\.', '_', tolower(.)))
+as_tibble(iris) %>% 
+  rename_all(~gsub('\\.', '_', tolower(.)))
 ```
 
 ## The everything() function for selecting columns
@@ -431,7 +434,10 @@ behave exactly the same:
 
 ```{r}
 map(iris, summary)
-iris %>% split(.$Species) %>% map(summary)
+
+iris %>% 
+  split(.$Species) %>% 
+  map(summary)
 ```
 
 Just like the **plyr** functions indicate the input and output in the function name 
@@ -440,7 +446,14 @@ However, `map_df()` will take a list and try to return a `data.frame`, casting t
 value as a `data.frame` and binding together if possible.
 
 ```{r}
-iris %>% select_if(is.numeric) %>% map_df(summary)
+iris %>% 
+  select_if(is.numeric) %>% 
+  map_df(mean)
+
+# an equivalent way is
+iris %>% 
+  select_if(is.numeric) %>% 
+  summarize_all(mean)
 ```
 
 To show a more realistic example, let's say that we need to load the iris dataset 
@@ -475,7 +488,8 @@ and then spit it back out.
 **Code Snippet**: Convert all factors in a `data.frame` to characters. 
 
 ```{r}
-as_tibble(iris) %>% modify_if(is.factor, as.character)
+as_tibble(iris) %>% 
+  modify_if(is.factor, as.character)
 ```
 
 ## Doing date arithmetic with lubridate
@@ -561,7 +575,6 @@ iris %>%
   mutate(pct_of_species_total = n / sum(n)) %>%
   ungroup() %>%
   select(Species, below_avg_sepal_length, n, pct_of_species_total, everything())
-  
 ```
 
 There are a few interesting components to this analysis. The first is the use of the 
