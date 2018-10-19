@@ -1,0 +1,567 @@
+---
+title: "APIs: Coding Against the Web"
+author: "Steven M. Mortimer"
+date: "10/19/2018"
+output: 
+  github_document:
+    toc: true
+    toc_depth: 2
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(echo = TRUE, cache = FALSE)
+```
+
+# Background
+
+<center>
+  <img src="./img/earl-2017-jeremy-morris.png" />
+  <em>Credit: Jeremy Morris at EARL 2017</em>
+</center><br>
+
+## What is an API
+
+An <u><b>A</b></u>pplication <u><b>P</b></u>rogramming <u><b>I</b></u>nterface
+is just an abstraction from a lower level process. Think of this as a black box
+where you just need to provide some formatted input and you'll get back some
+formatted output without any need to understand how things are being done.
+
+<center>
+  <img src="./img/black-box.png" />
+</center>
+
+Today, we'll be discussing web-based data APIs. They abstract away the data
+being stored in a database, so that you can access the data without needing to
+get access to the database or write ad-hoc queries. Web-based data APIs come in
+two flavors (SOAP and REST), which we'll discuss next.
+
+<center>
+  <img src="./img/soap-v-rest.png" />
+</center><br>
+
+## What makes a SOAP API?
+
+SOAP stands for <u><b>S</b></u>imple <u><b>O</b></u>bject <u><b>A</b></u>ccess <u><b>P</b></u>rotocol.  
+
+It turns out that SOAP APIs can function on multiple computer protocols (HTTP,
+SMTP, TCP, or JMS). This means that SOAP APIs don't need to function over the
+web, which is just one easy way to transmit information to people.
+
+SOAP APIs are almost always written in XML (eXtensible Markup Language), and
+instructions that describe how you can use SOAP APIs are almost always provided
+in a WSDL (Web Service Description Language). Below is a snapshot of the
+Salesforce API and how it defines a "PermissionSet" object.
+
+<center>
+  <img src="./img/salesforce-wsdl.png" />
+</center>  
+
+As you can see, this code is pretty complicated and hard to read. On the other
+hand, it is very specific about how to define objects and work with them in the
+API. For this reason, XML is more secure, ACID-compliant, and all-around more
+durable despite being harder to work with.  
+
+Additional Resources:
+
+ - [The Difference Between SOAP and REST](http://spf13.com/post/soap-vs-rest)
+ - [SOAP vs. REST](https://www.upwork.com/hiring/development/soap-vs-rest-comparing-two-apis/)
+ - [SOAP vs REST Challenges](http://www.soapui.org/testing-dojo/world-of-api-testing/soap-vs--rest-challenges.html)
+
+## What makes a REST API?
+
+REST stands for <u><b>RE</b></u>presentational <u><b>S</b></u>tate
+<u><b>T</b></u>ransfer.
+
+REST uses the Verb-Noun Paradigm where operations map exactly to HTTP protocol
+actions like `GET`, `POST`, `PUT`, and `DELETE` and the collections of data are
+nouns. For example, in the Square API you would GET (verb) a customer (noun).
+
+REST APIs are almost always JSON (Javascript Object Notation) where the
+instructions are provided on a web document (typically Swagger UI style) that
+you can read and format. The data types are not as strict as a SOAP API. Below
+is a snapshot of the Square API. You can see that it's much simpler to read than
+the Salesforce SOAP API shown above.
+
+<center>
+  <img src="./img/square-api-doc.png" />
+</center><br>  
+
+## Working with XML and JSON
+
+It is important to know whether an API is SOAP or REST because, as mentioned,
+they are linked to processing and returning either XML or JSON. Unfortunately,
+in R there are a number of competing packages that help handle each format. I
+recommend trying the **xml2** and **jsonlite** packages first. These are both
+part of the tidyverse. However, sometimes you may find that the **XML**,
+**rjson**, or **RJSONIO** packages provide unique functionality that is better
+for your use case.
+
+Let's consider a tangible example of these two formats, one after the other. For
+this purpose, imagine that you are working with customer data. Here's what a
+single customer record might look like in each API format.
+
+**SOAP API (XML)**
+```{r xml-record-example, echo = FALSE, comment = NA}
+XML::newXMLNode("customer",
+                XML::newXMLNode("first_name", "Elon"),
+                XML::newXMLNode("last_name", "Musk"),
+                XML::newXMLNode("occupation", "Genius")
+                )
+```
+
+**REST API (JSON)**
+```{r json-record-example, echo = FALSE, comment = NA}
+cust_record <- list(customer = list(first_name = "Elon", 
+                                    last_name = "Musk", 
+                                    occupation = "Genius"))
+jsonlite::toJSON(cust_record, pretty = TRUE, auto_unbox = TRUE)
+```
+
+# Getting started in R
+
+Above we mentioned two packages **xml2** and **jsonlite**. These packages will
+parse API data from XML or JSON to a `list` or `data.frame`. However, we must be
+able to communicate with the server to even get the data in the first place.
+This HTTP communication can be done using the **httr** package. Along with the
+`httr` package it is helpful to load the rest of the **tidyverse**, which
+contains the **dplyr**, **tidyr**, and **purrr** packages that will aid in
+further processing the data into a tidy format.
+
+```{r load-packages, warning=FALSE, message=FALSE}
+library(xml2)
+library(jsonlite)
+library(httr)
+library(tidyverse)
+```
+
+## How to authenticate to an API
+
+APIs almost always require authenticating, because the authentication process
+protects an API's data and because creators usually want to track and limit
+requests accordingly. There are three common types of authentication:
+
+ 1. Basic Authentication: You send over your username and password
+ 2. API Key Authentication: You send over a long key or token in the URL or the
+ Header
+ 3. OAuth 2.0 Authentication: You authorize a client to interact with your level
+ of permissions
+
+**Basic Authentication**
+
+```{r basic-auth, eval = FALSE}
+response <- GET("http://httpbin.org/basic-auth/user/passwd", 
+                authenticate("user", "passwd"))
+content(response, as = "parsed")
+```
+
+*API Key Authentication**
+
+```{r api-key-auth, eval = FALSE}
+# Square API list locations with authentication provided in the header
+GET("https://connect.squareup.com/v2/locations", 
+    add_headers(Authorization = sprintf("Bearer %s", 
+                                        "sq0atp-PQdK9iw65pOwQgTQXtQt6")))
+
+# Open Movie Database movie search by title with the authentication provided in
+# the URL
+GET(paste0('https://www.omdbapi.com/',
+           '?t=The+Godfather&plot=short&apikey=4439909d'))
+```
+
+**Note**: Username/Password and Key-based authentication is only considered
+secure if used together with other security mechanisms, such as HTTPS/SSL.
+Otherwise, people who snoop and grab your internet traffic could see in
+plain-text what your credentials are and then turn around to use them
+themselves.
+
+**OAuth 2.0 Authentication**
+
+This is the most complex and secure method of authentication. It consists of
+multiple parts, namely:
+
+ - An `Authorization URL`, where you send your request initially
+ - A `Token URL`, where you get your token initially
+ - A `Refresh URL`, where you'll get a new token after your current token
+ expires
+ - `Scopes`, a list of resources that clients can access given the credentials
+ they supply
+ 
+Fortunately, R takes care of all of this, so long as you create a "client" in R. 
+
+```{r oauth2-auth, eval = FALSE}
+sq_oauth_app <- oauth_app(
+  "square",
+  key = app_id, 
+  secret = app_secret,
+  redirect_uri = callback_url
+)
+
+sq_oauth_endpoints <- oauth_endpoint(
+  request = NULL,
+  base_url = sprintf("%s/oauth2",
+                     "https://connect.squareup.com"),
+  authorize = "authorize", 
+  access = "token", 
+  revoke = "revoke"
+)
+
+sq_token <- oauth2.0_token(
+  endpoint = sq_oauth_endpoints,
+  app = sq_oauth_app, 
+  cache = cache
+)
+
+GET("https://connect.squareup.com/v2/locations", 
+    config(token = sq_token))
+```
+
+## Keeping your credentials hidden in .Rprofile
+
+In the API Key Authentication example above, I put my token in the script like
+this:
+
+```{r exposed-token, eval=FALSE}
+GET("https://connect.squareup.com/v2/locations", 
+    add_headers(Authorization = sprintf("Bearer %s", "sq0atp-PQdK9iw65pOwQgTQXtQt6")))
+```
+
+This is not really secure because anybody with this script can now pretend to be
+me. As an alternative, you can have R store your passwords and other sensitive
+information outside of your script to keep it hidden. Follow the steps below to
+keep the Square API token hidden on your computer in a way that will allow also
+you to still be able to reference it in future scripts.
+
+The concept we're going to apply for this purpose involves environment variables
+in R. The R manual provides some detail about how and where environment
+variables can be stored:
+
+> R searches for a user profile, a file of R code. The path of this file can be 
+> specified by the R_PROFILE_USER environment variable (and tilde expansion will 
+> be performed). If this is unset, a file called ‘.Rprofile’ is searched for in 
+> the current directory or in the user's home directory (in that order). The user 
+> profile file is sourced into the workspace.
+
+The first step is figuring out your HOME directory. You can do this by running the 
+following command in R: 
+
+```{r checking-home-directory}
+# create the .Rprofile file at this location if it doesn't already exist
+Sys.getenv("HOME")
+```
+
+### Enabling the Viewing of Hidden Files
+
+The .Rprofile file is a "hidden" file because it starts with a period. For this reason 
+you may need to enable "Hidden Files" in your File Explorer (Windows) or Finder (Mac) in 
+order for it to show up in your folders. To do this on Mac you need to open up the terminal and type: 
+
+```
+defaults write com.apple.finder AppleShowAllFiles YES
+```
+
+Finally relaunch Finder by using holding the Option key, then right clicking on the 
+Finder icon in the dock and click Relaunch. 
+
+### Adding your credentials to .Rprofile
+
+Open up the .Rprofile file, add the following lines, and save it.
+
+```
+options(scipen=99, stringsAsFactors=FALSE)
+Sys.setenv(SQUARE_PAT = "sq0atp-PQdK9iw65pOwQgTQXtQt6")
+```
+**NOTE**: Ensure that there is a new line at the end of your file so that the 
+second command runs!
+
+### Checking your .Rprofile settings
+
+Now that you've saved your token in you'll need to restart R. This is because R 
+reads the `.Rprofile` everytime you start R, so the restart forces the file to be 
+loaded again. You can restart R by going to `Session -> Restart R` or using the 
+shortcut `CMD+SHIFT+F10` (`CRTL+SHIFT+F10` on Windows). You can check that the token 
+now exists by running: 
+
+```{r check-token}
+Sys.getenv('SQUARE_PAT')
+```
+
+## Becoming familiar with HTTP status codes
+
+Before you get started making API calls, it is important to understand various messages 
+that the API will return. HTTP status codes follow a pattern so that, at a glance, 
+understand where the error happened. After that there is usually an "error code" and 
+"error detail" that more fully describes why that error occurred. Here are the ranges 
+of codes and what they mean:
+
+ - 2XX: Success!
+ - 4XX: Your fault!
+ - 5XX: Their fault!
+
+Here is an example where I wasn't authenticated before making the API call. It's 
+a 401 error, that's my fault.
+
+```{r no-password-error}
+response <- GET("https://connect.squareup.com/v2/locations")
+response
+content(response, as='parsed')
+```
+
+Again, here is the right way to provide authentication to the call:
+
+```{r with-password, eval=FALSE}
+GET("https://connect.squareup.com/v2/locations",
+    add_headers(Authorization = sprintf("Bearer %s", "sq0atp-PQdK9iw65pOwQgTQXtQt6")))
+```
+
+Here is an example where I didn't get the URL correct. I forgot to include the "s" 
+to spell "locations" not "location" as the endpoint.
+
+```{r wrong-url}
+response <- GET("https://connect.squareup.com/v2/location")
+response
+content(response, as='parsed')
+```
+
+There are about 40 status codes. Here are tips on how to handle the most common codes you'll see:
+
+ - 200: Success: Jump for joy, everything was processed successfully
+ - 401: Unauthenticated: Make sure you're sending your password or token correctly
+ - 404: Not Found: Make sure the URL you're sending to is the right one
+ - 500: Server Error: Double check you're formatting the request correctly
+
+## Anatomy of API calls (scheme, hostname, path, query, and body)
+
+Every API call can be broken down into a few different elements. See this example 
+where we can create a new customer record 
+
+ - **Scheme**: http or https
+ - **Hostname**: connect.squareup.com
+ - **Path**: v2/customers
+ - **Query**: ?key1=value1&key2=value2
+ - **Body**: `{'given_name'='Bob', 'family_name'='Miller', 'note'='API Test'}`
+
+Putting his all together you want to make a request like this:
+
+```
+POST https://connect.squareup.com/v2/customers
+Authorization: Bearer sq0atp-PQdK9iw65pOwQgTQXtQt6
+{
+  "given_name": "Bob",
+  "family_name": "Miller",
+  "note": "API Test"
+}
+```
+
+Here is how to replicate that from R: 
+
+```{r example-POST, eval=FALSE}
+response <- POST('https://connect.squareup.com/v2/customers', 
+                 add_headers(Authorization = sprintf("Bearer %s", "sq0atp-PQdK9iw65pOwQgTQXtQt6")),
+                 body = list(given_name='Bob', 
+                             family_name='Miller', 
+                             note='API Test'), 
+                 encode='json')
+status_code(response)
+content(response, as='parsed')
+```
+
+In the example above we didn't show how the "query" component fits in. A query is information 
+added at the end of the "path" component to control the behavior. It's always represented 
+as a series of key, value pairs after a question mark in the URL. Here is an example where 
+we pull all the transactions for the Corner location between October 5th and 6th and 
+ensure that they are returned in descending order.
+
+```{r example-with-query-param}
+response <- GET(paste0('https://connect.squareup.com/v2/locations/1AWPRVVVFWGQF/transactions',
+                       '?begin_time=2018-10-05T00:00:00Z&end_time=2018-10-06T00:00:00Z&sort_order=DESC'),
+                add_headers(Authorization = sprintf("Bearer %s", "sq0atp-PQdK9iw65pOwQgTQXtQt6")))
+response
+```
+
+As you can see the URL can get very long and complicated. The `httr` package has 
+a function called `build_url()` that makes it easier to construct the right URL 
+from a bunch of component parts. Here is an example where we use the `build_url()` 
+function to create our request URL.
+
+```{r example-using-build-url}
+url <- parse_url("http://connect.squareup.com")
+url$scheme <- "https"
+url$path <- "v2/locations/1AWPRVVVFWGQF/transactions"
+url$query <- list(begin_time = "2018-10-05T00:00:00Z", 
+                  end_time = "2018-10-06T00:00:00Z",
+                  sort_order = "DESC")
+this_url <- build_url(url)
+this_url
+```
+
+You'll notice here that colon (`:`) character was "escaped" with `%3A`. This is because 
+certain characters are reserved and can be mistaken as part of the URL path, so the 
+`build_url()` function safely handles these by encoding them. This is a handy way to avoid 
+mistakes in forming the URL.
+
+## HTTP verbs (GET, POST, PUT, PATCH, DELETE)
+
+In the last example you saw that I used two different functions, the `POST()` function and 
+then the `GET()` function. This is because I wanted to do different types of things. 
+In the first example I wanted to "post" the new customer data to the API server. In the 
+second, I wanted to "get" the customer data.
+
+The takeaway is always keep in mind what type of operation you are trying to do. If you are trying 
+to create or update a record, you most likely won't be using the `GET()` function. Using the wrong 
+HTTP verb is an error that can sometimes be hard to debug and is easy to avoid. This table 
+summarizes the basic type of behavior you want to do and the associated verb.
+
+Verb | Behavior | Has Body?
+-----|----------|:---------:
+GET | Read Data | ✗
+POST | Create/Read Data | ✓
+PUT/PATCH | Update Data | ✓
+DELETE | Delete Data | ✗
+
+Below is a screenshot of the API documentation where they make it very clear what 
+type of HTTP request you should be using if you want to create a customer in contrast 
+to just listing customers.
+
+<img width="400px" src="./img/create-customer.png" />
+</br>
+<img width="400px" src="./img/list-customers.png" />  
+
+# Using the Square APIs (Connect v1 & v2)
+
+Square has developed two different APIs (Connect [v1](https://docs.connect.squareup.com/api/connect/v1) & 
+[v2](https://docs.connect.squareup.com/api/connect/v2)) that are organized to have endpoints 
+that each serve a different type of data. For examples, a URL for customers (`v2/customers`), a URL for 
+payments (`v1/{location_id}/payments`), a URL for the products you sell (`v1/{location_id}/items`), etc. 
+This way you can easily find the type of data you're looking for. 
+
+## The role of locations in the Square API
+
+The Square API stores a lot of information. It is likely that they have a database 
+that is "partitioned" by location so that whenever a new request comes in they can 
+quickly pull the data by navigating directly to that location's partion and then pulling the data 
+based on the request. You'll see that certain endpoints require you to specify the location. 
+Here is an example for the transactions: 
+
+`GET /v2/locations/{location_id}/transactions`  
+
+So how do you get the location IDs? Use the `ListLocations` endpoint. Here is how to 
+gather the information for every location: 
+
+```{r list-locations}
+response <- GET('https://connect.squareup.com/v2/locations',
+                add_headers(Authorization = sprintf("Bearer %s", "sq0atp-PQdK9iw65pOwQgTQXtQt6")))
+map_df(content(response, as='parsed')$locations, 
+       .f=function(x){
+         tibble(id = x$id, 
+                location_name = x$name)
+       })
+```
+
+## Pulling transactions
+
+Now that we know The Corner location has ID `1AWPRVVVFWGQF` we can use it to pull all 
+the recent transactions. 
+
+```{r list-corner-transactions}
+response <- GET(paste0('https://connect.squareup.com/v2/locations/1AWPRVVVFWGQF/transactions',
+                       '?begin_time=2018-10-05T00:00:00Z&end_time=2018-10-06T00:00:00Z&sort_order=DESC'),
+                add_headers(Authorization = sprintf("Bearer %s", "sq0atp-PQdK9iw65pOwQgTQXtQt6")))
+
+all_transactions <- content(response, as='parsed')$transactions %>%
+  map_df(~as_tibble(modify_if(., ~(length(.x) > 1 | is.list(.x)), list)))
+
+all_transactions
+```
+
+The transaction literally only represents a location and timestamp when a transaction 
+occurred. The "tender" where money was exchanged is included inside the "tenders" field: 
+
+```{r show-tenders-field}
+all_transactions$tenders[1]
+```
+
+## Pulling order itemizations
+
+In the example above we saw that the transaction data only provides the gross revenue 
+for the transaction and the customer ID. If we want to know more about each customer 
+order, then we need to use the `Payments` endpoint.
+
+```{r payments-example}
+response <- GET(paste0('https://connect.squareup.com/v1/1AWPRVVVFWGQF/payments',
+                       '?begin_time=2018-10-05T00:00:00Z&end_time=2018-10-06T00:00:00Z'),
+                add_headers(Authorization = sprintf("Bearer %s", "sq0atp-PQdK9iw65pOwQgTQXtQt6")))
+
+all_payments <- content(response, as='parsed') %>%
+  map_df(~as_tibble(modify_if(., ~(length(.x) > 1 | is.list(.x)), list)))
+
+head(all_payments$itemizations[1][[1]][[1]], 4)
+```
+
+## Using the squareupr package
+
+Pulling API data in R is definitely a time consuming process. You have to check the 
+documentation, fiddle with the R code to reproduce the HTTP call, then parse the output 
+into a tidy format. For this reason, R users typically create packages that simplify 
+your workflow and cut out all the processing and guesswork. This is the reason for 
+creating the **squareupr** package. In order to start using the package you must 
+first install it from GitHub like this: 
+
+```{r squareupr-install, eval=FALSE}
+devtools::install_github('StevenMMortimer/squareupr')
+```
+
+And before using the package you need to load it and supply it with your Square API 
+token so that all of the API calls are authenticated properly.
+
+```{r squareupr-load}
+library(squareupr)
+sq_auth(Sys.getenv('SQUARE_PAT'))
+```
+
+Now that the pacakge is loaded you can pull transaction data is like this:
+
+```{r pulling-transaction-data}
+our_locations <- sq_list_locations()
+yesterdays_transactions <- sq_list_transactions("The Corner (C'ville)")
+yesterdays_transactions
+```
+
+Or pulling customers from the last 90 days can be done like this
+```{r squareupr-search-customers}
+created_start <- format(Sys.Date()-90, '%Y-%m-%dT00:00:00-00:00')
+created_end <- format(Sys.Date(), '%Y-%m-%dT00:00:00-00:00')
+our_customers <- sq_search_customers(query = list(filter=
+                                                    list(created_at=
+                                                           list(start_at=created_start,
+                                                                end_at=created_end))))
+our_customers$given_name <- "{HIDDEN}"
+our_customers$family_name <- "{HIDDEN}"
+our_customers %>% select(id, created_at, updated_at, 
+                         given_name, family_name, preferences, groups)
+```
+
+And if you'd like to get the assigned groups there is a function called `sq_extract_cust_groups()` 
+to do that. This is an example of having "helper" functions that continue to process 
+down the API data into a tidy format so that we all can do analyses faster and easier.
+
+```{r squareupr-extract-cust-groups}
+sq_extract_cust_groups(our_customers)
+```
+
+## The performance of the API
+
+It takes 70 seconds to get a month's worth of transaction data from the Corner location, 
+then it takes another 75 seconds to get the payment data to breakdown each transaction's items. 
+Furthermore, it takes a few minutes to take the JSON and convert it into a tidy format. 
+You can see that the time starts to become a barrier to actually doing data analysis. For 
+this reason we've started pulling down the API data and using that instead of using 
+the API directly. All of that data is being stored here:
+
+https://github.com/sustainablecommerce/the-juice-laundry/tree/master/data
+
+## Next steps
+
+Our analyses of Square data will require more functions and storing more data. Every step 
+towards making a data flow reproducible and tidy will reduce mistakes and the time to 
+analyze later. So if you come up with a function to do something useful consider 
+adding it to the package or our library to leverage again later. 

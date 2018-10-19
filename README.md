@@ -2,13 +2,11 @@
 A series of Workshops on Programming with the Modern R
 
 ### Workshop Schedule
-Second Friday of Sep/Oct/Nov?
-
 Date | Time | Location | Workshop | Topics
----|---|---|---------
+---|---|---|---|---------
 9/14 | 9:45am-11:45am | RRH 407N | Hacking it in the Tidyverse | Tricks from **lubridate**, **purrr** and **dplyr** including `group_by`, `rename_all`, etc. plus the basics of writing functions.
-10/12 | TBD |  | APIs: Coding Against the Web | What is an API, REST vs. SOAP, WSDL vs. WADL, Dealing with APIs and R with code examples, **squareupr** overview
-11/16 | TBD |  | How Work in R gets Shared | Markdown, Shiny? HTML, CSS, JavaScript, GitHub - Gitflow, Package structure, Project structure
+10/19 | 3:00pm-5:00pm | RRH 305 | APIs: Coding Against the Web | What is an API, REST vs. SOAP, WSDL vs. WADL, Dealing with APIs and R with code examples, **squareupr** overview
+11/16 | TBD | TBD | How Work in R gets Shared | Markdown, Shiny? HTML, CSS, JavaScript, GitHub - Gitflow, Package structure, Project structure
 
 ### Content
 Our couse of study will contain three 2 hour workshops. It will just be the 4 of us, so we'll keep it fun, interactive, and stop frequently to ask questions, debug each others' code, etc...
