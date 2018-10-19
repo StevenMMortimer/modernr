@@ -154,7 +154,7 @@ response <- GET("http://httpbin.org/basic-auth/user/passwd",
 content(response, as = "parsed")
 ```
 
-*API Key Authentication**
+**API Key Authentication**
 
 ```{r api-key-auth, eval = FALSE}
 # Square API list locations with authentication provided in the header
