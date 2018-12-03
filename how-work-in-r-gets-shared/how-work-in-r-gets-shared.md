@@ -15,12 +15,14 @@ Steven M. Mortimer
 Sharing with R Users
 ====================
 
-<p align="center">
-<img src="./img/xkcd-documents.png" height="400px" />
-</p>
+In this section we will cover 3 different aspects of sharing your R code with other technical R users. First by covering how to structure your code and version it on GitHub, but also the basics of building an R package since that is one way to concisely share your code with other R users.
+
 R Project Folder Structures
 ---------------------------
 
+<p align="center">
+<img src="./img/xkcd-documents.png" height="400px" />
+</p>
 Many programming languages and frameworks use folder structures for configuration and extensibility. To not use a standard would mean reinventing the wheel each time and risk confusing/slowing down collaborators. This problem has been tackled by many individuals in the R community. Based on their suggestions I have adapted the following structure to be quick and easy to use:
 
 <p align="center">
@@ -159,14 +161,14 @@ A common facet of R packages is their tests. When you create a package you can a
 <p align="center">
 <img src="./img/tests-screenshot.png" height="120px" />
 </p>
-Since testing is a hallmark of good software design there are people who provide free computers to deploy your software to whenever you make changes. The folks at [TravisCI](http://travis-ci.org) and [CodeCov](http://codecov.io/) do exactly that. If you put special configuration files inside your R package, then everytime the code goes to GitHub, a server will be spun up with your new code and your tests will be run. This is why you might see extra files inside R packages called `.travis.yml` or `codecov.yml` along with many other types of configuration files. Here is an example where the maintainers of the **dplyr** package test the package on 7 different computer environments to ensure stability between changes in the code.
+Since testing is a hallmark of good software design there are people who provide free computers to deploy your software to whenever you make changes. The folks at [TravisCI](http://travis-ci.org) and [CodeCov](http://codecov.io/) do exactly that. If you put special configuration files inside your R package, then everytime the code goes to GitHub, a server will be spun up with your new code and your tests will be run. This is why you might see extra files inside R packages called `.travis.yml` or `codecov.yml` along with many other types of configuration files. Here is an example where the maintainers of the **dplyr** package test the package on 7 different computer environments to ensure stability when the code is modified.
 
 <p align="center">
 <img src="./img/dplyr-travis.png" height="500px" />
 </p>
 ### Resources
 
-Here are a few resources to help you create a package:
+Here are a few resources to help you create an R package:
 
 -   [**R Packages**](http://r-pkgs.had.co.nz) by Hadley Wickham
 -   [*Writing an R Package from scratch*](https://hilaryparker.com/2014/04/29/writing-an-r-package-from-scratch/) by Hilary Parker
@@ -175,13 +177,25 @@ Here are a few resources to help you create a package:
 Sharing with non-R Users
 ========================
 
+In this section we will cover three tools to share your analysis with individuals who do not know about R and are only concerned with the insights or analysis you've derived by using R.
+
 Google Sheets
 -------------
 
--   Example of how to do it (create a public spreadsheet and let people push to it)
--   talk about auth a little
--   Show Version History benefit
+Most everyone in the business world is familiar with spreadsheets. The problem with Excel spreadsheets is that they are are typically created and emailed to others. This is not a huge problem, but if you want to create reproducible analyses and push the results to others quickly, then Google Sheets is a handy alternative. There is the **googlesheets** package that lets you authenticate as yourself from within R to access all your documents on Google Drive and edit them just like you would from your browser. I have created a Google Sheet that is located at: <https://docs.google.com/spreadsheets/d/1f2h0UU-GYEX9HDc2HKp918D3Vrf21Xirj5iHRfmuOfM/edit?usp=sharing>.
 
+``` r
+library(googlesheets)
+ss <- gs_url("https://docs.google.com/spreadsheets/d/1f2h0UU-GYEX9HDc2HKp918D3Vrf21Xirj5iHRfmuOfM")
+gs_edit_cells(ss, ws=1, input = "Hello", anchor="B2")
+gs_edit_cells(ss, ws="iris", input = iris, anchor="A1")
+```
+
+A nice benefit to using Google Sheets, besides on-demand editing from R, is that Google Sheets has in-built versioning. If you click `File` -&gt; `Version history` -&gt; `See version history`, then you can see how the data has changed, by whom, and you can revert it back if necessary.
+
+<p align="center">
+<img src="./img/googlesheets-versioning.png" height="300px" />
+</p>
 R Markdown
 ----------
 
@@ -193,14 +207,111 @@ R Markdown
 Shiny + HTML/CSS/JavaScript
 ---------------------------
 
--   talk about ui.R, server.R
+The shift towards web-based technologies as a means to deliver information has put increasing pressure on business analysts to communicate results via the web. Shiny is a web application framework for R that harnesses the power of modern web technologies. You can build sophisticated web applications using simple pieces of R code that you already know well.
+
+First, you must create a folder for your app and put all related files inside that folder. At minimum every Shiny app contains 2 parts:
+
+1.  A UI (client-side) that is specified in a file called `ui.R`
+2.  Server Logic (server-side) that is Specified in a file called `server.R`
+
+**Example UI Code**
+
+``` r
+library(shiny)
+shinyUI(
+  fluidPage(
+    titlePanel('Revenue Prediction from Marketing Expenditures'),
+    sidebarLayout(
+      sidebarPanel(
+        sliderInput(inputId = 'spend', 
+                    label = 'Expenditure Level in $K:',
+                    min = 54, max = 481, value = 250)
+      ),
+      mainPanel(
+        plotOutput('prediction_plot')
+      )
+    )
+  )
+)
+```
+
+**Example Server Code**
+
+``` r
+library(shiny)
+
+revenue <- read.csv('./data/marketing.csv')
+model <- lm(revenues ~ marketing_total, data = revenue)
+
+shinyServer(function(input, output) {
+  
+  output$prediction_plot <- renderPlot({
+    newdata <- data.frame(marketing_total = input$spend)
+    pred <- predict(model, newdata, interval = 'predict')
+    
+    plot(revenue$marketing_total, revenue$revenues, 
+         xlab = 'Marketing Expenditures ($K)',
+         ylab = 'Revenues ($K)')
+    
+    abline(model, col = 'blue')
+    points(input$spend, pred[1], pch = 19, col = 'blue', cex = 2)
+    points(c(rep(input$spend, 2)), c(pred[2], pred[3]),
+           pch = '-', cex = 2, col = 'orange')
+    segments(input$spend, pred[2], input$spend, pred[3],
+             col = 'orange', lty = 2, lwd = 2)
+  })
+  
+})
+```
+
+The output of these components looks like this:
+
+<p align="center">
+<img src="./img/basic-shiny-app.png" height="500px" />
+</p>
+You can run this code and see how it works by running:
+
+``` r
+library(shiny)
+runGitHub(repo = "com.packtpub.intro.r.bi",
+          username = "StevenMMortimer",
+          subdir = "Chapter8-ShinyDashboards/Ch8-BasicShinyApp")
+```
 
 ### Reactivity
 
+The UI side and the server side will communicate through a property called "reactivity". The plot is updated whenever the input slider changes. It "reacts" to it changing so the plot is always up-to-date.
+
+``` r
+sliderInput(inputId = 'spend', 
+            label = 'Expenditure Level in $K:',
+            min = 54, max = 481, value = 250)
+```
+
+``` r
+shinyServer(function(input, output) {
+  output$prediction_plot <- renderPlot({
+    newdata <- data.frame(marketing_total = input$spend)
+    ...
+```
+
+The inputs and outputs are passed between each side of the app. `ui.R` provides `input$` that `server.R` accesses, then `server.R` provides `output$` that `ui.R` displays. A more in-depth discussion of reactivity is available here: <https://shiny.rstudio.com/articles/understanding-reactivity.html>
+
 ### Shiny App Example
 
--   pull example from Packt book
+The flexibility of Shiny allows you to build much more complex web applications. Below is an example app that
+
+``` r
+library(shiny)
+runGitHub(repo = "com.packtpub.intro.r.bi",
+          username = "StevenMMortimer",
+          subdir = "Chapter8-ShinyDashboards/Ch8-CampaignCreatorApp")
+```
 
 ### Shiny App Tips
 
 -   give pro tips on building a shiny app
+
+### Hosting Your Shiny App
+
+Shiny apps need a server to run on so that users can access them whenever they want. There is a free service maintained by RStudio called at <https://www.shinyapps.io/>. The alternative is to host your apps privately by procuring a server from AWS, Azure, Heroku, etc. and installing R Shiny Server.
