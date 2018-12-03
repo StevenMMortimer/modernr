@@ -137,54 +137,100 @@ changes to your files, which GitHub displays on their website along with the fil
 
 ## R Package Structure
 
-There is a common adage that if you have more than two functions in your project then you 
-should consider bundling them into an R package. Hadley Wickham brings up the point that 
-packages conform to a standard, so you do not have to think about structuring your work 
-and they save you time because of all the tools made to support package builders. 
+>"If you have more than two functions in your project then you should consider 
+making an R package."
+
+Hadley Wickham brings up the point that packages conform to a standard, so you 
+do not have to think about structuring your work and they save you time because 
+of all the tools made to support you while making a package.
 
 CRAN (Comprehensive R Archive Network) is a central location where fully-vetted R 
 packages are shared with the world, but you can just as easily create and share packages 
 in a shared folder, on GitHub, or elsewhere. For example, many R packages are hosted 
-on GitHub, so if you want to install them, you do not need to get it from CRAN. You 
+on GitHub, so if you want to install them, you do not need to get them from CRAN. You 
 can go straight to the source on GitHub and download it like so: 
 
 ```{r package-github-download, eval=FALSE}
 library(devtools)
-install_github('tidyverse/dplyr') # {{username}}/{{package name}}
+# this installs the dplyr package from GitHub, instead of CRAN
+# the format is {{GitHub Username}}/{{Package Name}}
+install_github('tidyverse/dplyr') 
 ```
 
 ### Package Architecture
 
-There can be a lot of files in an R package, but perhaps the most exciting structure and 
-tool that Hadley was talking about is the ability to generate documentation and examples 
-for your R functions. First, you create a folder called `R` that keeps `.R` scripts. 
-If you add documentation above each function, then a package called **roxygen** will 
-generate the `?help` pages (in the package's `man` folder). This is how all packages 
-have a PDF index of functions and the "Help" pane in RStudio. Here is a side-by-side 
-example of a function's documentation is created.
+The most exciting structure and tool that Hadley was talking about in R packages 
+is the ability to generate documentation and examples for your R functions. First, 
+you create a folder called `R` that keeps `.R` scripts. If you add documentation 
+above each function, then a package called **roxygen** will generate the `?help` 
+pages (in the package's `man` folder). This is how all packages have a PDF index 
+of functions and the "Help" pane in RStudio. Here is a side-by-side example of a 
+function (`sayhello()`) and how documentation is created by following a standard 
+format.
 
-***
-INSERT IMAGE HERE
+<p align="center">
+  <img src="./img/sayhello-documentation.png" width="100%" />
+</p>
 
-***
+Running the function `devtools::document()` automatically creates all of the help 
+pages in the folder `man` along with a list of the package functions in the `NAMESPACE` 
+file. The only other files that are needed for the package are the `DESCRIPTION` and `LICENSE`.
 
-Create test-package
+<p align="center">
+  <img src="./img/sayhello-folders.png" height="120px" />
+</p>
 
- - DESCRIPTION?
+Writing an R package does not need to be intimidating. The steps are literally: 
+
+ 1. Create a folder with another folder inside called "R"
+ 2. Throw all your R scripts in there and make sure they have documentation above the functions
+ 3. Run `devtools::document()` to generate `man` folder and `NAMESPACE` file
+ 4. Add the `DESCRIPTION` and `LICENSE` files
  
+The hardest part is Step 2, writing all your functions and documenting them and 
+that is the way it should be. The most focus should be on your unique knowledge and 
+documenting it for others to use. The rest can be done in minutes.
+
 ### Package Testing/Integrity 
 
- - tests
- - travis
- - codecov
- 
+A common facet of R packages is their tests. When you create a package you can 
+also create tests for its functions to check that they all behave as you would 
+expect before sharing it with others. Creating these tests is a really good idea 
+because it forces you to define how your functions should work in good cases and 
+in bad cases. In the example `sayhello()` function show above the `name` parameter 
+should be a character, but what might happen if it encounters a number or an `NA` 
+missing value? That is the purpose of tests, to document and define the behavior of 
+your functions under a variety of scenarios. So for this package we add one more 
+folder called `tests` and include two R scripts. One script is a runner for the 
+entire package and the other script is to test our function. In the example below 
+we are testing what the function does and what we expect for numbers, logicals, missing, 
+and NULL values.
+
+<p align="center">
+  <img src="./img/tests-screenshot.png" height="120px" />
+</p>
+
+Since testing is a hallmark of good software design there are people who provide 
+free computers to deploy your software to whenever you make changes. The folks at 
+[TravisCI](http://travis-ci.org) and [CodeCov](http://codecov.io/) do exactly that. 
+If you put special configuration files inside your R package, then everytime the 
+code goes to GitHub, a server will be spun up with your new code and your tests 
+will be run. This is why you might see extra files inside R packages called `.travis.yml` 
+or `codecov.yml` along with many other types of configuration files. Here is an example 
+where the maintainers of the **dplyr** package test the package on 7 different computer 
+environments to ensure stability between changes in the code.
+
+<p align="center">
+  <img src="./img/dplyr-travis.png" height="500px" />
+</p>
+
 ### Resources
 
-Here are two of the best resources to help you create a package:
+Here are a few resources to help you create a package:
 
  - [**R Packages**](http://r-pkgs.had.co.nz) by Hadley Wickham
  - [*Writing an R Package from scratch*](https://hilaryparker.com/2014/04/29/writing-an-r-package-from-scratch/) by Hilary Parker
- - [**sayhello**]() - a basic example package with only one function
+ - [**sayhello**](https://github.com/StevenMMortimer/sayhello) - a basic example package with only one function
  
 # Sharing with non-R Users
 
