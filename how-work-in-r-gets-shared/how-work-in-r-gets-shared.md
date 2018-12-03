@@ -9,27 +9,23 @@ Steven M. Mortimer
     -   [R Package Structure](#r-package-structure)
 -   [Sharing with non-R Users](#sharing-with-non-r-users)
     -   [Google Sheets](#google-sheets)
-    -   [RMarkdown](#rmarkdown)
+    -   [R Markdown](#r-markdown)
     -   [Shiny + HTML/CSS/JavaScript](#shiny-htmlcssjavascript)
 
 Sharing with R Users
 ====================
 
-<center>
-<img src="./img/xkcd-documents.png" />
-</center>
-<br>
-
+<p align="center">
+<img src="./img/xkcd-documents.png" height="400px" />
+</p>
 R Project Folder Structures
 ---------------------------
 
 Many programming languages and frameworks use folder structures for configuration and extensibility. To not use a standard would mean reinventing the wheel each time and risk confusing/slowing down collaborators. This problem has been tackled by many individuals in the R community. Based on their suggestions I have adapted the following structure to be quick and easy to use:
 
-<center>
-<img src="./img/folder-structure.png" />
-</center>
-<br>
-
+<p align="center">
+<img src="./img/folder-structure.png" height="300px" />
+</p>
 The key features of this structure is that you physically separate the inputs, intermediate data, and outputs into three different folders:
 
 1.  `data`: Folder for put raw, unprocessed data
@@ -38,10 +34,17 @@ The key features of this structure is that you physically separate the inputs, i
 
 There are two remaining folders in the structure:
 
-1.  `docs`: Folder for supporting articles, explanations, and other documentation
-2.  `R`: Folder for R scripts that hold global settings or functions if needed
+<ol start="4">
+<li>
+<code>docs</code>: Folder for supporting articles, explanations, and other documentation
+</li>
+<li>
+<code>R</code>: Folder for R scripts that hold global settings or functions if needed
+</li>
+</ol>
+Oftentimes you have a few R scripts that are long and complicated. I recommend breaking up sequential steps into smaller files that numbered so that the order to run them is obvious and then call each of them using the `source()` function. This way you can create a file called `main.R` that you can configure to run all of your analysis from one file.
 
-In the top level are your analytical R scripts. Oftentimes these scripts can be long and complicated. I recommend breaking up any sequential steps into smaller files that numbered so that the order to run them is obvious and then call each of them using the `source()` function. This way you can create a file called `main.R` that you can configure to run all of your analysis from one file. An example of a `main.R` file might look like this:
+An example of a `main.R` file might look like this:
 
 ``` r
 # set runtime options and load packages ------------------------------
@@ -52,8 +55,8 @@ suppressMessages(library(here)) # to manage file paths
 suppressMessages(library(tidyverse)) # to process data
 
 # load R scripts that contains variables and functions for the analysis
-source(here::here("byob-study", "R", "globals.R"))
-source(here::here("byob-study", "R", "helpers.R"))
+source(here::here("R", "globals.R"))
+source(here::here("R", "helpers.R"))
 
 # create a folder for storing the output of the analysis from today
 # this way your output doesn't accidentally get overwritten from another time
@@ -68,7 +71,7 @@ source(here::here('02-model.R'))
 
 ### Caching
 
-Sometimes your project will involve a very large dataset or a sequence of complex and long-running processing steps. "Caching" is a term for saving off your analysis mid-way through the process so that you can restart it exactly from that particular spot. R Markdown documents have this built into them, but you can also do this from any R script by using the package **simpleCache**. **simpleCache** was created at the University of Virginia in part by the UVA R Users Group leader, VP (Pete) Nagraj. Below is an example that uses a simulation to show how the standard error is calculated. The value is stored in the variable `std_error`. The caching process will check the `cache` folder and if the object exists, then that block of code is not run and the cached output is loaded from the cache folder. If the cached object is not found, then the code runs, creates the object, and saves it to the cache folder.
+Sometimes your project will involve a very large dataset or a sequence of complex and long-running processing steps. "Caching" is a term for saving off your analysis mid-way through the process so that you can restart it exactly from that particular spot. R Markdown documents have this built into them, but you can also do this from any R script by using the package **simpleCache**. **simpleCache** was created at the University of Virginia in part by the UVA R Users Group leader, VP (Pete) Nagraj. Below is an example that uses a simulation to confirm the theoretical standard error. The value is stored in the variable `std_err`. The caching process will check the `cache` folder and if the object exists, then that block of code is not run and the cached output is loaded from the cache folder. If the cached object is not found, then the code runs, creates the object, and saves it to the cache folder.
 
 ``` r
 suppressMessages(library(here))  # for file management
@@ -80,7 +83,7 @@ setCacheDir(here::here('cache'))
 
 # the mean of 1000 standard normal observations has a standard deviation 
 # that should approach 1/sqrt(1000) = 0.0316
-simpleCache("std_error", {
+simpleCache("std_err", {
   n_sample_avgs <- numeric(100)
   for(i in 1:100){
     n_sample_avgs[i] <- mean(rnorm(1000, 0, 1))
@@ -101,21 +104,42 @@ Here is a list of resources to help you review and inform your approach:
 GitHub + Git flow
 -----------------
 
-Once you have worked hard on creating a project in R you typically want to do 2 things: 1) Backup the work you've done and 2) Share it with others. GitHub is the de facto place to accomplish both of these tasks.
+Once you have worked hard on creating a project in R you typically want to do 2 things:
+
+1.  Backup the work you've done
+2.  Share it with others
+
+GitHub is the de facto place to accomplish both of these tasks at once. GitHub is an online (cloud) service owned by Microsoft that allows developers to not only host their code, but collaborate with others on it there. They have designed a nice website to see what is happening with your code. The process of putting your code onto GitHub involves using **git**, which is a version control tool. It tracks changes to your files, which GitHub displays on their website along with the files.
+
+### Git Branches
 
 -   Pull from Git Scenarios Talk (walk through examples?)
 
 R Package Structure
 -------------------
 
--   Why package
--   install from github
+There is a common adage that if you have more than two functions in your project then you should consider bundling them into an R package. Hadley Wickham brings up the point that packages conform to a standard, so you do not have to think about structuring your work and they save you time because of all the tools made to support package builders.
+
+CRAN (Comprehensive R Archive Network) is a central location where fully-vetted R packages are shared with the world, but you can just as easily create and share packages in a shared folder, on GitHub, or elsewhere. For example, many R packages are hosted on GitHub, so if you want to install them, you do not need to get it from CRAN. You can go straight to the source on GitHub and download it like so:
+
+``` r
+library(devtools)
+install_github('tidyverse/dplyr') # {{username}}/{{package name}}
+```
 
 ### Package Architecture
 
--   description
--   man/roxygen
--   r code
+There can be a lot of files in an R package, but perhaps the most exciting structure and tool that Hadley was talking about is the ability to generate documentation and examples for your R functions. First, you create a folder called `R` that keeps `.R` scripts. If you add documentation above each function, then a package called **roxygen** will generate the `?help` pages (in the package's `man` folder). This is how all packages have a PDF index of functions and the "Help" pane in RStudio. Here is a side-by-side example of a function's documentation is created.
+
+------------------------------------------------------------------------
+
+INSERT IMAGE HERE
+
+------------------------------------------------------------------------
+
+Create test-package
+
+-   DESCRIPTION?
 
 ### Package Testing/Integrity
 
@@ -129,6 +153,7 @@ Here are two of the best resources to help you create a package:
 
 -   [**R Packages**](http://r-pkgs.had.co.nz) by Hadley Wickham
 -   [*Writing an R Package from scratch*](https://hilaryparker.com/2014/04/29/writing-an-r-package-from-scratch/) by Hilary Parker
+-   [**sayhello**]() - a basic example package with only one function
 
 Sharing with non-R Users
 ========================
@@ -140,8 +165,8 @@ Google Sheets
 -   talk about auth a little
 -   Show Version History benefit
 
-RMarkdown
----------
+R Markdown
+----------
 
 -   describe markdown
 -   describe chunk
