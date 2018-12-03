@@ -10,7 +10,7 @@ Steven M. Mortimer
 -   [Sharing with non-R Users](#sharing-with-non-r-users)
     -   [Google Sheets](#google-sheets)
     -   [R Markdown](#r-markdown)
-    -   [Shiny + HTML/CSS/JavaScript](#shiny-htmlcssjavascript)
+    -   [R Shiny](#r-shiny)
 
 Sharing with R Users
 ====================
@@ -106,6 +106,8 @@ Here is a list of resources to help you review and inform your approach:
 GitHub + Git flow
 -----------------
 
+<img src="./img/gh-logo.png" width="200px" align="left" style="margin-right:20px;" />
+
 Once you have worked hard on creating a project in R you typically want to do 2 things:
 
 1.  Backup the work you've done
@@ -119,6 +121,8 @@ GitHub is the de facto place to accomplish both of these tasks at once. GitHub i
 
 R Package Structure
 -------------------
+
+<img src="./img/r-package-logo.png" width="150px" align="left" style="margin-right:20px;" />
 
 > "If you have more than two functions in your project then you should consider making an R package."
 
@@ -182,6 +186,8 @@ In this section we will cover three tools to share your analysis with individual
 Google Sheets
 -------------
 
+<img src="./img/gs-logo.png" width="150px" align="left" style="margin-right:20px;" />
+
 Most everyone in the business world is familiar with spreadsheets. The problem with Excel spreadsheets is that they are are typically created and emailed to others. This is not a huge problem, but if you want to create reproducible analyses and push the results to others quickly, then Google Sheets is a handy alternative. There is the **googlesheets** package that lets you authenticate as yourself from within R to access all your documents on Google Drive and edit them just like you would from your browser. I have created a Google Sheet that is located at: <https://docs.google.com/spreadsheets/d/1f2h0UU-GYEX9HDc2HKp918D3Vrf21Xirj5iHRfmuOfM/edit?usp=sharing>.
 
 ``` r
@@ -199,13 +205,17 @@ A nice benefit to using Google Sheets, besides on-demand editing from R, is that
 R Markdown
 ----------
 
+<img src="./img/rmarkdown-hex.png" width="120px" align="left" style="margin-right:20px;" />
+
 -   describe markdown
 -   describe chunk
 -   show Caching
 -   show how this document works (Rmd -&gt; github md)
 
-Shiny + HTML/CSS/JavaScript
----------------------------
+R Shiny
+-------
+
+<img src="./img/shiny-hex.png" width="115px" align="left" style="margin-right:20px;" />
 
 The shift towards web-based technologies as a means to deliver information has put increasing pressure on business analysts to communicate results via the web. Shiny is a web application framework for R that harnesses the power of modern web technologies. You can build sophisticated web applications using simple pieces of R code that you already know well.
 
@@ -310,7 +320,60 @@ runGitHub(repo = "com.packtpub.intro.r.bi",
 
 ### Shiny App Tips
 
--   give pro tips on building a shiny app
+<ol start="1">
+<b>
+<li>
+Add a progress indicator!
+</li>
+</b>
+</ol>
+The **shinysky** package has a function called `busyIndicator()` that quickly and easily implements a spinning wheel whenever calculations are happening in your app. This notifies users of when to wait for the app to finish processing before being able to click elsewhere in the app.
+
+``` r
+busyIndicator(text = "Calculation in progress ... ", wait = 0)
+```
+
+The above code results in showing this:
+
+<p align="center">
+<img src="./img/busy-indicator.png" height="150px" />
+</p>
+<ol start="2">
+<b>
+<li>
+Learn and Use CSS!
+</li>
+</b>
+</ol>
+CSS stands for Cascading Style Sheets and it is a syntax that defines the look and feel of web pages. Think of CSS as your personal library of good design. If you continually refine your designs via CSS, then they can quickly be adapted to any Shiny app that you build.
+
+<p align="center">
+<img src="./img/css-example.png" height="200px"/>
+</p>
+The CSS code above defines the font style, color, and size along with the margins for every page in the app unless otherwise specified.
+
+<ol start="3">
+<b>
+<li>
+Let Users Download Your Data
+</li>
+</b>
+</ol>
+A big part of Shiny’s value proposition in the enterprise is promoting data democracy and the free sharing of information for use to further benefit the company. Shiny app users may prefer other tools, such as Excel or Tableau or Python. Empower your users and allow them the flexibility to intergrate into their preferred tool. The best way to facilitate that is to allow downloads of the data. The best package by far for displaying data and allowing for downloads is the **datatable** package. The following code snippet creates a row for your download button and then the datatable.
+
+``` r
+fluidRow(
+  column(12, downloadButton("downloadDataFromTable", "Download Table Data"))
+)
+fluidRow(
+  column(12, DT::dataTableOutput("table", width = "100%"))
+)
+```
+
+<p align="center">
+<img src="./img/datatable.png" width="500px" />
+</p>
+I recommend pulling the button to the right of the screen using `float: right;` in your CSS so the button is naturally placed at the top right of your table and ready for the user to click.
 
 ### Hosting Your Shiny App
 

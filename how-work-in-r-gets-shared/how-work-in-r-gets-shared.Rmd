@@ -123,6 +123,7 @@ Here is a list of resources to help you review and inform your approach:
  - [**Cookiecutter Data Science**](https://drivendata.github.io/cookiecutter-data-science/#directory-structure) (it is for Python, but applies to R)
  
 ## GitHub + Git flow
+<img src="./img/gh-logo.png" width="200px" align="left" style="margin-right:20px;" />
 
 Once you have worked hard on creating a project in R you typically want to do 2 things: 
 
@@ -141,6 +142,7 @@ changes to your files, which GitHub displays on their website along with the fil
  - Pull from Git Scenarios Talk (walk through examples?)
 
 ## R Package Structure
+<img src="./img/r-package-logo.png" width="150px" align="left" style="margin-right:20px;" />
 
 >"If you have more than two functions in your project then you should consider 
 making an R package."
@@ -244,6 +246,7 @@ do not know about R and are only concerned with the insights or analysis you've
 derived by using R. 
 
 ## Google Sheets
+<img src="./img/gs-logo.png" width="150px" align="left" style="margin-right:20px;" />
 
 Most everyone in the business world is familiar with spreadsheets. The problem with 
 Excel spreadsheets is that they are are typically created and emailed to others. 
@@ -270,13 +273,15 @@ revert it back if necessary.
 </p>
 
 ## R Markdown
+<img src="./img/rmarkdown-hex.png" width="120px" align="left" style="margin-right:20px;" />
 
  - describe markdown
  - describe chunk
  - show Caching
  - show how this document works (Rmd -> github md)
 
-## Shiny + HTML/CSS/JavaScript
+## R Shiny
+<img src="./img/shiny-hex.png" width="115px" align="left" style="margin-right:20px;" />
 
 The shift towards web-based technologies as a means to deliver information has put 
 increasing pressure on business analysts to communicate results via the web. Shiny 
@@ -390,7 +395,69 @@ runGitHub(repo = "com.packtpub.intro.r.bi",
 
 ### Shiny App Tips
  
- - give pro tips on building a shiny app
+<ol start="1">
+  <b><li>Add a progress indicator!</li></b>
+</ol>
+
+The **shinysky** package has a function called `busyIndicator()` that quickly and 
+easily implements a spinning wheel whenever calculations are happening in your app. 
+This notifies users of when to wait for the app to finish processing before being 
+able to click elsewhere in the app.
+
+```{r busy, eval=FALSE}
+busyIndicator(text = "Calculation in progress ... ", wait = 0)
+```
+
+The above code results in showing this: 
+
+<p align="center">
+  <img src="./img/busy-indicator.png" height="150px" />
+</p>
+
+<ol start="2">
+  <b><li>Learn and Use CSS!</li></b>
+</ol>
+
+CSS stands for Cascading Style Sheets and it is a syntax that defines the look and 
+feel of web pages. Think of CSS as your personal library of good design. If you 
+continually refine your designs via CSS, then they can quickly be adapted to any 
+Shiny app that you build.
+
+<p align="center">
+  <img src="./img/css-example.png" height="200px"/>
+</p>
+
+The CSS code above defines the font style, color, and size along with the margins 
+for every page in the app unless otherwise specified.
+
+<ol start="3">
+  <b><li>Let Users Download Your Data</li></b>
+</ol>
+
+A big part of Shiny’s value proposition in the enterprise is promoting data democracy 
+and the free sharing of information for use to further benefit the company. Shiny 
+app users may prefer other tools, such as Excel or Tableau or Python. Empower your 
+users and allow them the flexibility to intergrate into their preferred tool. The 
+best way to facilitate that is to allow downloads of the data. The best package 
+by far for displaying data and allowing for downloads is the **datatable** package. 
+The following code snippet creates a row for your download button and then the datatable. 
+
+```{r datatable, eval=FALSE}
+fluidRow(
+  column(12, downloadButton("downloadDataFromTable", "Download Table Data"))
+)
+fluidRow(
+  column(12, DT::dataTableOutput("table", width = "100%"))
+)
+```
+
+<p align="center">
+  <img src="./img/datatable.png" width="500px" />
+</p>
+
+I recommend pulling the button to the right of the screen using `float: right;` 
+in your CSS so the button is naturally placed at the top right of your table and 
+ready for the user to click.
  
 ### Hosting Your Shiny App
 
