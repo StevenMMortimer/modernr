@@ -1,5 +1,5 @@
 ---
-title: "How Work in R Gets Shared3"
+title: "How Work in R Gets Shared"
 author: "Steven M. Mortimer"
 date: "12/12/2018"
 output: 
@@ -146,7 +146,9 @@ else has already changed and committed. When you "pull" their changes down to yo
 computer git will immediately warn you and section off the part of the code that is 
 problematic. 
 
-
+<p align="center">
+  <img src="./img/merge-conflict.png" height="300px" />
+</p> 
 
 ### Git Branches
 
