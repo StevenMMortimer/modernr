@@ -1,5 +1,5 @@
 ---
-title: "How Work in R Gets Shared"
+title: "How Work in R Gets Shared3"
 author: "Steven M. Mortimer"
 date: "12/12/2018"
 output: 
@@ -135,7 +135,18 @@ to see what is happening with your code. The process of putting your code onto
 GitHub involves using **git**, which is a version control tool. Git tracks changes 
 in plain-text files. It goes line-by-line pointing out any changes, keeping track 
 of each version, and allowing you to review. GitHub just displays those changes 
-on their website along with the files so it's easier for you to follow along. 
+on their website along with the files so it's easier for you to follow along.
+
+Git init
+
+### Merge Conflicts
+
+Merge conflicts happen when you have edited a part of the code locally that someone 
+else has already changed and committed. When you "pull" their changes down to your 
+computer git will immediately warn you and section off the part of the code that is 
+problematic. 
+
+
 
 ### Git Branches
 
@@ -304,6 +315,8 @@ x + y
 R Markdown is so powerful because you can explain the code right after showing it. 
 The included text breaks up the code into "chunks".
 
+### R Markdown YAML Header
+
 The format of the document that R Markdown will generate is determined by its "YAML". 
 The YAML is a section at the top of the document and is parsed by the R Markdown engine **knitr**. 
 Here is the YAML for this document: 
@@ -321,14 +334,19 @@ output:
 ```
 
 This tells **knitr** that it should produce a GitHub document (a speciic type of markdown) 
-with a table of contents that includes all the first and second-level headers. The 
-interesting thing is that R Markdown can incorporate other languges such as Python: 
+with a table of contents that includes all the first and second-level headers. 
+
+### Non-R Code
+
+The interesting thing is that R Markdown can incorporate other languges such as Python: 
 
 ```{python}
 squares = [x**2 for x in range(10)]
 print squares
 ```
  
+### Resources
+
 If you would like to learn more about R Markdown, then I highly recommend reading 
 [R Markdown: The Definitive Guide](https://bookdown.org/yihui/rmarkdown/).
 
