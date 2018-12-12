@@ -71,7 +71,7 @@ source(here::here('01-wrangle.R'))
 source(here::here('02-model.R'))
 ```
 
-### Caching
+#### Caching
 
 Sometimes your project will involve a very large dataset or a sequence of complex and long-running processing steps. "Caching" is a term for saving off your analysis mid-way through the process so that you can restart it exactly from that particular spot. R Markdown documents have this built into them, but you can also do this from any R script by using the package **simpleCache**. **simpleCache** was created at the University of Virginia in part by the UVA R Users Group organizer, VP (Pete) Nagraj. Below is an example that uses a simulation to confirm the theoretical standard error. The value is stored in the variable `std_err`. The caching process will check the `cache` folder and if the object exists, then that block of code is not run and the cached output is loaded from the cache folder. If the cached object is not found, then the code runs, creates the object, and saves it to the cache folder.
 
@@ -95,7 +95,7 @@ simpleCache("std_err", {
 })
 ```
 
-### Resources
+#### Resources
 
 Here is a list of resources to help you review and inform your approach:
 
@@ -109,9 +109,9 @@ GitHub + Git flow
 
 <img src="./img/gh-logo.png" width="200px" align="left" style="margin-right:20px;" />
 
-Once you have worked hard on creating a project in R you typically want to do 2 things: 1) Backup the work you've done and 2) Share it with others. GitHub is the de facto place to accomplish both of these tasks at once. GitHub is an online (cloud) service owned by Microsoft that allows developers to not only host their code, but collaborate with others on it there. They have designed a nice website to see what is happening with your code. The process of putting your code onto GitHub involves using **git**, which is a version control tool. Git tracks changes in plain-text files. It goes line-by-line pointing out any changes, keeping track of each version, and allowing you to review. GitHub just displays those changes on their website along with the files so it's easier for you to follow along.
+Once you have worked hard on creating a project in R you typically want to do 2 things: 1) Backup the work you've done and 2) Share it with others. GitHub is the de facto place to accomplish both of these tasks at once. GitHub is an online (cloud) service owned by Microsoft that allows developers to not only host their code, but collaborate with others on it there. They have designed a nice website to see what is happening with your code. The process of putting your code onto GitHub involves using [**Git**](https://git-scm.com/downloads), which is a version control tool. Git tracks changes in plain-text files. It goes line-by-line pointing out any changes, keeping track of each version, and allowing you to review. GitHub just displays those changes on their website along with the files so it's easier for you to follow along.
 
-### Using Git from Command Line
+#### Using Git from Command Line
 
 In RStudio there is an interface that allows you to click buttons like "Pull" and "Push". These are extremely helpful, but you might not know what exactly is happening when you push those buttons. The best way to become familiar with the process of version control is to sync all your changes using the command line. This will make you much more aware of what is happening. There are 4 steps to making your first commit:
 
@@ -120,31 +120,44 @@ In RStudio there is an interface that allows you to click buttons like "Pull" an
 3.  `git commit`
 4.  `git push`
 
-First, in order to put your files under git's version control system, you must go to a folder and type `git init`. This initializes a folder called `.git` that holds all the tracking information for any changes in the files.
+First, in order to put your files under Git's version control system, you must go to a folder and type `git init`. This initializes a folder called `.git` that holds all the tracking information for any changes in the files.
 
 <p align="center">
 <img src="./img/git-init-folder.png" height="300px" />
 </p>
 Second, after you make changes to the files, you must "add" them to git's version tracking system. This is the purpose of running the `git add` command. Inside RStudio when you click off the little check boxes for which files you want to sync, that is running a `git add` command for each of those files behind the scenes.
 
-Third, after you've added the changed files to git, you "lock in" those changes by doing a commit with `git commit`. This creates a unique "hash" code that identifies that specific state of the file at that point in time. You can always go back to previous commits by using the hash. Here is how the commits and hashes are displayed on GitHub for you to see:
+<p align="center">
+<img src="./img/git-add.png" width="600px" />
+</p>
+Third, after you've added the changed files to Git, you "lock in" those changes by doing a commit with `git commit`. This creates a unique "hash" code that identifies that specific state of the file at that point in time. You can always go back to previous commits by using the hash. Here is how the commits and hashes are displayed on GitHub for you to see:
 
 <p align="center">
 <img src="./img/commits-on-github.png" />
 </p>
-Finally, the `git push` command takes the changes you've committed locally and puts them on a remote server. Typically, the remote server is GitHub, but it can be GitHub Enterprise, Bitbucket, Stash, or other hosted services that provide an interface on top of git respositories.
+Finally, the `git push` command takes the changes you've committed locally and puts them on a remote server. Typically, the remote server is GitHub, but it can be GitHub Enterprise, Bitbucket, Stash, or other hosted services that provide an interface on top of Git respositories.
 
-### Merge Conflicts
+#### Merge Conflicts
 
-Merge conflicts happen when you have edited a part of the code locally that someone else has already changed and committed. When you "pull" their changes down to your computer git will immediately warn you and section off the part of the code that is problematic.
+Merge conflicts happen when you have edited a part of the code locally that someone else has already changed and committed. When you "pull" their changes down to your computer Git will immediately warn you and section off the part of the code that is problematic.
 
 <p align="center">
 <img src="./img/merge-conflict.png" height="300px" />
 </p>
-### Git Branches
+#### Git Branches
 
-Most developers keep track of what code is being written for each new feature by writing that code on separate branches. "Branches" are version of the same code that is
+Most developers keep track of what code is being written for each new feature by writing that code on separate branches. "Branches" are versions of the same code that are isolated from the main, or "master", version of the code. This way, if anything goes wrong, the prestine and tested "master" version will stay that way. Here is a screenshot of the [pulse](https://github.com/tidyverse/dplyr/pulse) from the **dplyr** package.
 
+<p align="center">
+<img src="./img/dplyr-pulse.png" height="400px" />
+</p>
+Notice how there are many different branches. Also, notice how that there were only 5 commits made to master, but 34 commits across all other branches. Most of the developers are working separately from the master branch and then incorporating it back into it when everything is ready.
+
+The process of merging branches back to the main branch is called a "pull request". Creating a pull request is the courteous way to collaboratively code with others. In the network graph below you can see how there are many different branches at once that get created and merged back into the master.
+
+<p align="center">
+<img src="./img/branching-network.png" height="350px" />
+</p>
 R Package Structure
 -------------------
 
@@ -163,7 +176,7 @@ library(devtools)
 install_github('tidyverse/dplyr') 
 ```
 
-### Package Architecture
+#### Package Architecture
 
 The most exciting structure and tool that Hadley was talking about in R packages is the ability to generate documentation and examples for your R functions. First, you create a folder called `R` that keeps `.R` scripts. If you add documentation above each function, then a package called **roxygen** will generate the `?help` pages (in the package's `man` folder). This is how all packages have a PDF index of functions and the "Help" pane in RStudio. Here is a side-by-side example of a function (`sayhello()`) and how documentation is created by following a standard format.
 
@@ -182,9 +195,9 @@ Writing an R package does not need to be intimidating. The steps are literally:
 3.  Run `devtools::document()` to generate `man` folder and `NAMESPACE` file
 4.  Add the `DESCRIPTION` and `LICENSE` files
 
-The hardest part is Step 2, writing all your functions and documenting them and that is the way it should be. The most focus should be on your unique knowledge and documenting it for others to use. The rest can be done in minutes.
+The hardest part is Step 2, writing all your functions and documenting them and that is the way it should be. The most focus should be on your unique knowledge and documenting it for others to use. The rest can be done in minutes. Here is a link to the GitHub repository containing the entire [**sayhello**](https://github.com/StevenMMortimer/sayhello) package which is a simple package designed to show you mininally what an R package must contain.
 
-### Package Testing/Integrity
+#### Package Testing/Integrity
 
 A common facet of R packages is their tests. When you create a package you can also create tests for its functions to check that they all behave as you would expect before sharing it with others. Creating these tests is a really good idea because it forces you to define how your functions should work in good cases and in bad cases. In the example `sayhello()` function show above the `name` parameter should be a character, but what might happen if it encounters a number or an `NA` missing value? That is the purpose of tests, to document and define the behavior of your functions under a variety of scenarios. So for this package we add one more folder called `tests` and include two R scripts. One script is a runner for the entire package and the other script is to test our function. In the example below we are testing what the function does and what we expect for numbers, logicals, missing, and NULL values.
 
@@ -196,7 +209,7 @@ Since testing is a hallmark of good software design there are people who provide
 <p align="center">
 <img src="./img/dplyr-travis.png" height="500px" />
 </p>
-### Resources
+#### Resources
 
 Here are a few resources to help you create an R package:
 
@@ -256,7 +269,7 @@ x + y
 
 R Markdown is so powerful because you can explain the code right after showing it. The included text breaks up the code into "chunks".
 
-### R Markdown YAML Header
+#### R Markdown YAML Header
 
 The format of the document that R Markdown will generate is determined by its "YAML". The YAML is a section at the top of the document and is parsed by the R Markdown engine **knitr**. Here is the YAML for this document:
 
@@ -274,7 +287,7 @@ output:
 
 This tells **knitr** that it should produce a GitHub document (a speciic type of markdown) with a table of contents that includes all the first and second-level headers.
 
-### Non-R Code
+#### Non-R Code
 
 The interesting thing is that R Markdown can incorporate other languges such as Python:
 
@@ -285,7 +298,7 @@ print squares
 
     ## [0, 1, 4, 9, 16, 25, 36, 49, 64, 81]
 
-### Resources
+#### Resources
 
 If you would like to learn more about R Markdown, then I highly recommend reading [R Markdown: The Definitive Guide](https://bookdown.org/yihui/rmarkdown/).
 
@@ -365,7 +378,7 @@ runGitHub(repo = "com.packtpub.intro.r.bi",
           subdir = "Chapter8-ShinyDashboards/Ch8-BasicShinyApp")
 ```
 
-### Reactivity
+#### Reactivity
 
 The UI side and the server side will communicate through a property called "reactivity". The plot is updated whenever the input slider changes. It "reacts" to it changing so the plot is always up-to-date.
 
@@ -384,7 +397,7 @@ shinyServer(function(input, output) {
 
 The inputs and outputs are passed between each side of the app. `ui.R` provides `input$` that `server.R` accesses, then `server.R` provides `output$` that `ui.R` displays. A more in-depth discussion of reactivity is available here: <https://shiny.rstudio.com/articles/understanding-reactivity.html>
 
-### Shiny App Example
+#### Shiny App Example
 
 The flexibility of Shiny allows you to build much more complex web applications. Below is an example app that
 
@@ -395,7 +408,7 @@ runGitHub(repo = "com.packtpub.intro.r.bi",
           subdir = "Chapter8-ShinyDashboards/Ch8-CampaignCreatorApp")
 ```
 
-### Shiny App Tips
+#### Shiny App Tips
 
 <ol start="1">
 <b>
@@ -452,6 +465,6 @@ fluidRow(
 </p>
 I recommend pulling the button to the right of the screen using `float: right;` in your CSS so the button is naturally placed at the top right of your table and ready for the user to click.
 
-### Hosting Your Shiny App
+#### Hosting Your Shiny App
 
 Shiny apps need a server to run on so that users can access them whenever they want. There is a free service maintained by RStudio called at <https://www.shinyapps.io/>. The alternative is to host your apps privately by procuring a server from AWS, Azure, Heroku, etc. and installing R Shiny Server.
