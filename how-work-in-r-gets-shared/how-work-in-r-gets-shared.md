@@ -1,7 +1,7 @@
 How Work in R Gets Shared
 ================
 Steven M. Mortimer
-12/11/2018
+12/12/2018
 
 -   [Sharing with R Users](#sharing-with-r-users)
     -   [R Project Folder Structures](#r-project-folder-structures)
@@ -73,9 +73,10 @@ source(here::here('02-model.R'))
 
 ### Caching
 
-Sometimes your project will involve a very large dataset or a sequence of complex and long-running processing steps. "Caching" is a term for saving off your analysis mid-way through the process so that you can restart it exactly from that particular spot. R Markdown documents have this built into them, but you can also do this from any R script by using the package **simpleCache**. **simpleCache** was created at the University of Virginia in part by the UVA R Users Group leader, VP (Pete) Nagraj. Below is an example that uses a simulation to confirm the theoretical standard error. The value is stored in the variable `std_err`. The caching process will check the `cache` folder and if the object exists, then that block of code is not run and the cached output is loaded from the cache folder. If the cached object is not found, then the code runs, creates the object, and saves it to the cache folder.
+Sometimes your project will involve a very large dataset or a sequence of complex and long-running processing steps. "Caching" is a term for saving off your analysis mid-way through the process so that you can restart it exactly from that particular spot. R Markdown documents have this built into them, but you can also do this from any R script by using the package **simpleCache**. **simpleCache** was created at the University of Virginia in part by the UVA R Users Group organizer, VP (Pete) Nagraj. Below is an example that uses a simulation to confirm the theoretical standard error. The value is stored in the variable `std_err`. The caching process will check the `cache` folder and if the object exists, then that block of code is not run and the cached output is loaded from the cache folder. If the cached object is not found, then the code runs, creates the object, and saves it to the cache folder.
 
 ``` r
+install.packages('simpleCache')
 suppressMessages(library(here))  # for file management
 suppressMessages(library(simpleCache)) # for caching long running parts of the script 
 
@@ -108,12 +109,7 @@ GitHub + Git flow
 
 <img src="./img/gh-logo.png" width="200px" align="left" style="margin-right:20px;" />
 
-Once you have worked hard on creating a project in R you typically want to do 2 things:
-
-1.  Backup the work you've done
-2.  Share it with others
-
-GitHub is the de facto place to accomplish both of these tasks at once. GitHub is an online (cloud) service owned by Microsoft that allows developers to not only host their code, but collaborate with others on it there. They have designed a nice website to see what is happening with your code. The process of putting your code onto GitHub involves using **git**, which is a version control tool. It tracks changes to your files, which GitHub displays on their website along with the files.
+Once you have worked hard on creating a project in R you typically want to do 2 things: 1) Backup the work you've done and 2) Share it with others. GitHub is the de facto place to accomplish both of these tasks at once. GitHub is an online (cloud) service owned by Microsoft that allows developers to not only host their code, but collaborate with others on it there. They have designed a nice website to see what is happening with your code. The process of putting your code onto GitHub involves using **git**, which is a version control tool. It tracks changes to your files, which GitHub displays on their website along with the files.
 
 ### Git Branches
 
@@ -124,7 +120,7 @@ R Package Structure
 
 <img src="./img/r-package-logo.png" width="150px" align="left" style="margin-right:20px;" />
 
-> "If you have more than two functions in your project then you should consider making an R package."
+> "If you have more than two functions in your project then you should consider making an R package. – Anonymous"
 
 Hadley Wickham brings up the point that packages conform to a standard, so you do not have to think about structuring your work and they save you time because of all the tools made to support you while making a package.
 
@@ -207,10 +203,53 @@ R Markdown
 
 <img src="./img/rmarkdown-hex.png" width="120px" align="left" style="margin-right:20px;" />
 
--   describe markdown
--   describe chunk
--   show Caching
--   show how this document works (Rmd -&gt; github md)
+R Markdown is a style of writing R code and text that makes it easier to write long-form blogs, papers, and articles because the numerical elements of the analysis can be seamlessly incorporated into the text without having to copy and paste.
+
+For example, you can embed the average of numbers one thru ten as <code class="r">\`r mean(1:10)\`</code>, which evaluates to 5.5. This is an example where R code is executed "in-line" with the text. Typically, you produced tables and figures separately then incorporate text, so R Markdown uses the concept of "chunks". Chunks are snippets of R code that are executed sequentially. Including this code in your R Markdown document:
+
+<pre class="sourceCode r">
+<code class="sourceCode r">&#96;&#96;&#96;{r, echo=TRUE, eval=TRUE, cache=TRUE}<br>
+x <- 2 + 2
+y <- 3 + 3
+x + y
+&#96;&#96;&#96;</code></pre>
+
+will yield the following:
+
+``` r
+x <- 2 + 2
+y <- 3 + 3
+x + y
+```
+
+    ## [1] 10
+
+R Markdown is so powerful because you can explain the code right after showing it. The included text breaks up the code into "chunks".
+
+The format of the document that R Markdown will generate is determined by its "YAML". The YAML is a section at the top of the document and is parsed by the R Markdown engine **knitr**. Here is the YAML for this document:
+
+``` r
+---
+title: "How Work in R Gets Shared"
+author: "Steven M. Mortimer"
+date: "12/12/2018"
+output: 
+  github_document:
+    toc: true
+    toc_depth: 2
+---
+```
+
+This tells **knitr** that it should produce a GitHub document (a speciic type of markdown) with a table of contents that includes all the first and second-level headers. The interesting thing is that R Markdown can incorporate other languges such as Python:
+
+``` python
+squares = [x**2 for x in range(10)]
+print squares
+```
+
+    ## [0, 1, 4, 9, 16, 25, 36, 49, 64, 81]
+
+If you would like to learn more about R Markdown, then I highly recommend reading [R Markdown: The Definitive Guide](https://bookdown.org/yihui/rmarkdown/).
 
 R Shiny
 -------
