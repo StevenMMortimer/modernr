@@ -109,11 +109,41 @@ GitHub + Git flow
 
 <img src="./img/gh-logo.png" width="200px" align="left" style="margin-right:20px;" />
 
-Once you have worked hard on creating a project in R you typically want to do 2 things: 1) Backup the work you've done and 2) Share it with others. GitHub is the de facto place to accomplish both of these tasks at once. GitHub is an online (cloud) service owned by Microsoft that allows developers to not only host their code, but collaborate with others on it there. They have designed a nice website to see what is happening with your code. The process of putting your code onto GitHub involves using **git**, which is a version control tool. It tracks changes to your files, which GitHub displays on their website along with the files.
+Once you have worked hard on creating a project in R you typically want to do 2 things: 1) Backup the work you've done and 2) Share it with others. GitHub is the de facto place to accomplish both of these tasks at once. GitHub is an online (cloud) service owned by Microsoft that allows developers to not only host their code, but collaborate with others on it there. They have designed a nice website to see what is happening with your code. The process of putting your code onto GitHub involves using **git**, which is a version control tool. Git tracks changes in plain-text files. It goes line-by-line pointing out any changes, keeping track of each version, and allowing you to review. GitHub just displays those changes on their website along with the files so it's easier for you to follow along.
 
+### Using Git from Command Line
+
+In RStudio there is an interface that allows you to click buttons like "Pull" and "Push". These are extremely helpful, but you might not know what exactly is happening when you push those buttons. The best way to become familiar with the process of version control is to sync all your changes using the command line. This will make you much more aware of what is happening. There are 4 steps to making your first commit:
+
+1.  `git init`
+2.  `git add`
+3.  `git commit`
+4.  `git push`
+
+First, in order to put your files under git's version control system, you must go to a folder and type `git init`. This initializes a folder called `.git` that holds all the tracking information for any changes in the files.
+
+<p align="center">
+<img src="./img/git-init-folder.png" height="300px" />
+</p>
+Second, after you make changes to the files, you must "add" them to git's version tracking system. This is the purpose of running the `git add` command. Inside RStudio when you click off the little check boxes for which files you want to sync, that is running a `git add` command for each of those files behind the scenes.
+
+Third, after you've added the changed files to git, you "lock in" those changes by doing a commit with `git commit`. This creates a unique "hash" code that identifies that specific state of the file at that point in time. You can always go back to previous commits by using the hash. Here is how the commits and hashes are displayed on GitHub for you to see:
+
+<p align="center">
+<img src="./img/commits-on-github.png" />
+</p>
+Finally, the `git push` command takes the changes you've committed locally and puts them on a remote server. Typically, the remote server is GitHub, but it can be GitHub Enterprise, Bitbucket, Stash, or other hosted services that provide an interface on top of git respositories.
+
+### Merge Conflicts
+
+Merge conflicts happen when you have edited a part of the code locally that someone else has already changed and committed. When you "pull" their changes down to your computer git will immediately warn you and section off the part of the code that is problematic.
+
+<p align="center">
+<img src="./img/merge-conflict.png" height="300px" />
+</p>
 ### Git Branches
 
--   Pull from Git Scenarios Talk (walk through examples?)
+Most developers keep track of what code is being written for each new feature by writing that code on separate branches. "Branches" are version of the same code that is
 
 R Package Structure
 -------------------
@@ -226,6 +256,8 @@ x + y
 
 R Markdown is so powerful because you can explain the code right after showing it. The included text breaks up the code into "chunks".
 
+### R Markdown YAML Header
+
 The format of the document that R Markdown will generate is determined by its "YAML". The YAML is a section at the top of the document and is parsed by the R Markdown engine **knitr**. Here is the YAML for this document:
 
 ``` r
@@ -240,7 +272,11 @@ output:
 ---
 ```
 
-This tells **knitr** that it should produce a GitHub document (a speciic type of markdown) with a table of contents that includes all the first and second-level headers. The interesting thing is that R Markdown can incorporate other languges such as Python:
+This tells **knitr** that it should produce a GitHub document (a speciic type of markdown) with a table of contents that includes all the first and second-level headers.
+
+### Non-R Code
+
+The interesting thing is that R Markdown can incorporate other languges such as Python:
 
 ``` python
 squares = [x**2 for x in range(10)]
@@ -248,6 +284,8 @@ print squares
 ```
 
     ## [0, 1, 4, 9, 16, 25, 36, 49, 64, 81]
+
+### Resources
 
 If you would like to learn more about R Markdown, then I highly recommend reading [R Markdown: The Definitive Guide](https://bookdown.org/yihui/rmarkdown/).
 

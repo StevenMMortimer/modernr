@@ -137,7 +137,46 @@ in plain-text files. It goes line-by-line pointing out any changes, keeping trac
 of each version, and allowing you to review. GitHub just displays those changes 
 on their website along with the files so it's easier for you to follow along.
 
-Git init
+### Using Git from Command Line
+
+In RStudio there is an interface that allows you to click buttons like "Pull" and "Push". 
+These are extremely helpful, but you might not know what exactly is happening when you 
+push those buttons. The best way to become familiar with the process of version control 
+is to sync all your changes using the command line. This will make you much more aware 
+of what is happening. There are 4 steps to making your first commit: 
+
+1. `git init`
+2. `git add`
+3. `git commit`
+4. `git push`
+
+First, in order to put your files under git's version control system, you must go 
+to a folder and type `git init`. This initializes a folder called `.git` that holds 
+all the tracking information for any changes in the files. 
+
+<p align="center">
+  <img src="./img/git-init-folder.png" height="300px" />
+</p> 
+
+Second, after you make changes to the files, you must "add" them to git's version 
+tracking system. This is the purpose of running the `git add` command. Inside RStudio 
+when you click off the little check boxes for which files you want to sync, that is 
+running a `git add` command for each of those files behind the scenes. 
+
+Third, after you've added the changed files to git, you "lock in" those changes 
+by doing a commit with `git commit`. This creates a unique "hash" code that identifies 
+that specific state of the file at that point in time. You can always go back to 
+previous commits by using the hash. Here is how the commits and hashes are displayed 
+on GitHub for you to see: 
+
+<p align="center">
+  <img src="./img/commits-on-github.png" />
+</p>
+
+Finally, the `git push` command takes the changes you've committed locally and 
+puts them on a remote server. Typically, the remote server is GitHub, but it can 
+be GitHub Enterprise, Bitbucket, Stash, or other hosted services that provide an 
+interface on top of git respositories.
 
 ### Merge Conflicts
 
@@ -152,7 +191,10 @@ problematic.
 
 ### Git Branches
 
- - Pull from Git Scenarios Talk (walk through examples?)
+Most developers keep track of what code is being written for each new feature by 
+writing that code on separate branches. "Branches" are version of the same code 
+that is 
+
 
 ## R Package Structure
 <img src="./img/r-package-logo.png" width="150px" align="left" style="margin-right:20px;" />
