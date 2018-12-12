@@ -1,5 +1,5 @@
 ---
-title: "How Work in R Gets Shared3"
+title: "How Work in R Gets Shared"
 author: "Steven M. Mortimer"
 date: "12/12/2018"
 output: 
